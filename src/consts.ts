@@ -1,7 +1,7 @@
 export const SITE = {
   title: 'Atharva',
   description:
-    'Engineer building software and ML systems, deep in open source, working toward inclusive AI. Musings on philosophy, computing, and mathematics.',
+    'Curious engineer in open source. Musings on software, philosophy, and the work of understanding.',
   url: 'https://atharva.dev',
   author: 'Atharva',
   twitter: '@attharrva15',
@@ -9,7 +9,8 @@ export const SITE = {
   medium: 'https://medium.com/@atharvakanherkar25',
   xArticles: 'https://x.com/attharrva15/articles',
   ogImage: '/og.jpg',
-  ogImageAlt: 'Atharva — engineer building software and ML systems in open source.',
+  ogImageAlt:
+    'Atharva — profile photo. Software in the open. Philosophy in the long run.',
   ogImageWidth: 1200,
   ogImageHeight: 630,
 } as const;

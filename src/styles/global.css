@@ -1170,6 +1170,35 @@ body.chat-open {
   border-bottom-right-radius: 4px;
 }
 
+.chat-message--streaming .chat-message__stream {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-message--streaming .chat-message__stream::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: var(--accent);
+  animation: chat-cursor 1s steps(1) infinite;
+}
+
+@keyframes chat-cursor {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
 .chat-sidebar__composer {
   flex-shrink: 0;
   border-top: 1px solid var(--rule);

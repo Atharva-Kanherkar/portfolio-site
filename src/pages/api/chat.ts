@@ -41,14 +41,18 @@ function isValidMessages(value: unknown): value is ChatMessage[] {
   });
 }
 
+function errorResponse(message: string, status: number) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 export const POST: APIRoute = async ({ request }) => {
   const apiKey = import.meta.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'Chat is not configured yet.' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return errorResponse('Chat is not configured yet.', 503);
   }
 
   let body: unknown;
@@ -56,23 +60,18 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     body = await request.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid request body.' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return errorResponse('Invalid request body.', 400);
   }
 
   if (!body || typeof body !== 'object' || !('messages' in body) || !isValidMessages(body.messages)) {
-    return new Response(JSON.stringify({ error: 'Invalid messages.' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return errorResponse('Invalid messages.', 400);
   }
 
   const model = import.meta.env.OPENAI_MODEL ?? 'gpt-5-mini';
 
   const payload: Record<string, unknown> = {
     model,
+    stream: true,
     messages: [{ role: 'system', content: buildAssistantSystemPrompt() }, ...body.messages],
   };
 
@@ -90,37 +89,77 @@ export const POST: APIRoute = async ({ request }) => {
       body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
+    if (!response.ok || !response.body) {
       const errorText = await response.text();
       console.error('OpenAI error:', errorText);
-      return new Response(JSON.stringify({ error: 'The assistant is unavailable right now.' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return errorResponse('The assistant is unavailable right now.', 502);
     }
 
-    const data = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
+    const upstream = response.body;
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
 
-    const reply = data.choices?.[0]?.message?.content?.trim();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const reader = upstream.getReader();
+        let buffer = '';
 
-    if (!reply) {
-      return new Response(JSON.stringify({ error: 'Empty response from assistant.' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              break;
+            }
 
-    return new Response(JSON.stringify({ reply }), {
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() ?? '';
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed.startsWith('data:')) {
+                continue;
+              }
+
+              const data = trimmed.slice(5).trim();
+              if (!data || data === '[DONE]') {
+                continue;
+              }
+
+              try {
+                const parsed = JSON.parse(data) as {
+                  choices?: Array<{ delta?: { content?: string } }>;
+                };
+                const content = parsed.choices?.[0]?.delta?.content;
+
+                if (content) {
+                  controller.enqueue(encoder.encode(content));
+                }
+              } catch {
+                // Ignore malformed chunks from upstream.
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Chat stream failed:', error);
+          controller.error(error);
+          return;
+        }
+
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+      },
     });
   } catch (error) {
     console.error('Chat route failed:', error);
-    return new Response(JSON.stringify({ error: 'The assistant is unavailable right now.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return errorResponse('The assistant is unavailable right now.', 500);
   }
 };

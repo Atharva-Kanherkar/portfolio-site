@@ -31,8 +31,9 @@ const jsonLd = {
   author: {
     '@type': 'Person',
     name: SITE.author,
-    url: 'https://atharva.dev',
+    url: SITE.url,
   },
+  image: new URL(SITE.ogImage, SITE.url).href,
   mainEntityOfPage: {
     '@type': 'WebPage',
     '@id': new URL(`/blog/${post.id}`, Astro.site).href,

@@ -4,11 +4,14 @@ export const SITE = {
     'Engineer building software and ML systems, deep in open source, working toward inclusive AI. Musings on philosophy, computing, and mathematics.',
   url: 'https://atharva.dev',
   author: 'Atharva',
-  email: 'hello@atharva.dev',
   twitter: '@attharrva15',
   github: 'https://github.com/Atharva-Kanherkar',
   medium: 'https://medium.com/@atharvakanherkar25',
   xArticles: 'https://x.com/attharrva15/articles',
+  ogImage: '/og.jpg',
+  ogImageAlt: 'Atharva — engineer building software and ML systems in open source.',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
 } as const;
 
 export const WRITING_SECTIONS = [

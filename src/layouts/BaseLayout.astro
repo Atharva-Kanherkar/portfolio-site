@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import Analytics from '@vercel/analytics/astro';
 import '../styles/global.css';
 import BaseHead from '../components/BaseHead.astro';
 import ChatSidebar from '../components/ChatSidebar.astro';
@@ -34,6 +35,7 @@ const { title, description, image, type, publishedTime, modifiedTime, tags, json
       jsonLd={jsonLd}
     />
     <ClientRouter />
+    <Analytics mode="production" />
   </head>
   <body>
     <div class="page-shell" transition:animate="fade">

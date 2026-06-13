@@ -13,7 +13,7 @@ const posts = await getCollection('blog', ({ data }) => !data.draft);
   title="Musings"
   description="Musings on philosophy, computing, mathematics, and more."
 >
-  <section class="section container container--wide" aria-label="Musings">
+  <section class="section section--musings container container--wide" aria-label="Musings">
     <h1 class="sr-only">Musings</h1>
     <WritingIntro showRss />
     <WritingColumns posts={posts} />

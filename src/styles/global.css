@@ -345,6 +345,11 @@ main {
   padding: var(--space-xl) 0;
 }
 
+.section--musings .section__intro {
+  max-width: min(48ch, 100%);
+  margin-bottom: var(--space-xl);
+}
+
 .section__title {
   font-family: var(--font-body);
   font-size: 0.8125rem;
@@ -375,7 +380,11 @@ main {
   line-height: 1.65;
   color: var(--ink-soft);
   max-width: min(42ch, 100%);
-  margin: -0.25rem 0 var(--space-lg);
+  margin: 0 0 var(--space-lg);
+}
+
+.section__title + .section__intro {
+  margin-top: -0.25rem;
 }
 
 .section__intro a {
@@ -570,8 +579,9 @@ main {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-template-rows: auto 1fr;
   column-gap: var(--space-lg);
-  row-gap: var(--space-md);
+  row-gap: var(--space-lg);
   align-items: start;
+  margin-top: var(--space-md);
 }
 
 .writing-column {
@@ -583,11 +593,11 @@ main {
 
 .writing-column__header {
   margin: 0;
-  padding-bottom: var(--space-sm);
+  padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--rule);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .writing-column__title {
@@ -611,7 +621,7 @@ main {
 .writing-column__list {
   list-style: none;
   margin: 0;
-  padding: var(--space-sm) 0 0;
+  padding: var(--space-md) 0 0;
   display: grid;
   gap: var(--space-md);
 }
@@ -794,11 +804,15 @@ main {
 .back-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.35em;
+  gap: 0.5em;
   font-size: var(--text-sm);
   color: var(--ink-muted);
   text-decoration: none;
-  margin-bottom: var(--space-lg);
+  margin: var(--space-md) 0 var(--space-xl);
+}
+
+article.container {
+  padding-bottom: var(--space-xl);
 }
 
 .back-link:hover {
@@ -892,7 +906,7 @@ main {
   .writing-columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: none;
-    gap: var(--space-lg);
+    gap: var(--space-xl);
   }
 
   .writing-column {
@@ -905,7 +919,7 @@ main {
   .writing-columns {
     grid-template-columns: 1fr;
     grid-template-rows: none;
-    gap: var(--space-lg);
+    gap: var(--space-xl);
   }
 
   .writing-column {

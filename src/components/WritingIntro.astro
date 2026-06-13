@@ -1,0 +1,25 @@
+---
+import { SITE, WRITING_INTRO } from '../consts';
+
+interface Props {
+  showRss?: boolean;
+}
+
+const { showRss = false } = Astro.props;
+---
+
+<p class="section__intro">
+  {WRITING_INTRO}{' '}
+  <a href={SITE.medium} rel="noopener noreferrer" target="_blank">Medium</a>
+  {' and '}
+  <a href={SITE.xArticles} rel="noopener noreferrer" target="_blank">X articles</a>
+  {' too.'}
+  {
+    showRss && (
+      <>
+        {' '}
+        Subscribe via <a href="/rss.xml">RSS</a>.
+      </>
+    )
+  }
+</p>

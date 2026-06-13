@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Projects from '../components/Projects.astro';
+import Timeline from '../components/Timeline.astro';
+import { Image } from 'astro:assets';
+import atharvaPhoto from '../assets/atharva.png';
+import { SITE } from '../consts';
+
+export const prerender = true;
+---
+
+<BaseLayout title={SITE.title} description={SITE.description}>
+  <section class="hero container">
+    <div class="hero__inner">
+      <Image
+        src={atharvaPhoto}
+        alt=""
+        class="hero__photo fade-in fade-in--2"
+        widths={[320, 640]}
+        sizes="180px"
+        loading="eager"
+      />
+      <div class="hero__content">
+        <h1 class="sr-only">{SITE.title}</h1>
+        <p class="hero__lede fade-in fade-in--3">
+          I'm 22, a curious engineer who builds software and ML systems and spends most of my time in
+          open source, working toward more inclusive AI. Away from the terminal, my intellectual roots
+          run through Advaita Vedanta and Indian philosophy.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section container" aria-label="Timeline">
+    <Timeline />
+  </section>
+
+  <section class="section container" aria-labelledby="projects">
+    <h2 id="projects" class="section__title">Projects</h2>
+    <p class="section__intro">
+      Stupid, curious engineer. I build things because they seem worth building. Sometimes they
+      aren't, and that's just how it goes. For all my results of inquisitiveness, see my{' '}
+      <a href={SITE.github}>GitHub</a>.
+    </p>
+    <Projects />
+  </section>
+</BaseLayout>

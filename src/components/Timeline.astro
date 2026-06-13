@@ -1,0 +1,32 @@
+---
+import { TIMELINE } from '../timeline';
+
+interface TimelineItem {
+  period: string;
+  title: string;
+  description: string;
+}
+
+interface Props {
+  items?: readonly TimelineItem[];
+}
+
+const { items = TIMELINE } = Astro.props;
+---
+
+<ol class="timeline">
+  {
+    items.map((item, i) => (
+      <li class={`timeline__item fade-in fade-in--${Math.min(i + 3, 4)}`}>
+        <div class="timeline__marker" aria-hidden="true">
+          <span class="timeline__dot" />
+        </div>
+        <div class="timeline__content">
+          <time class="timeline__period">{item.period}</time>
+          <p class="timeline__title">{item.title}</p>
+          <p class="timeline__desc">{item.description}</p>
+        </div>
+      </li>
+    ))
+  }
+</ol>

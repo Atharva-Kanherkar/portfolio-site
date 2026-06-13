@@ -1,0 +1,190 @@
+<div class="chat-root" data-chat-root>
+  <button
+    type="button"
+    class="chat-toggle"
+    data-chat-open
+    aria-controls="chat-sidebar"
+    aria-expanded="false"
+    aria-label="Open assistant"
+  >
+    Ask
+  </button>
+
+  <div class="chat-sidebar" id="chat-sidebar" data-chat-sidebar hidden>
+    <div class="chat-sidebar__panel" role="dialog" aria-modal="true" aria-label="Assistant">
+      <header class="chat-sidebar__header">
+        <button type="button" class="chat-sidebar__close" data-chat-close aria-label="Close assistant">
+          <span aria-hidden="true">×</span>
+        </button>
+      </header>
+
+      <div class="chat-sidebar__messages" data-chat-messages aria-live="polite" aria-relevant="additions">
+        <div class="chat-row chat-row--assistant">
+          <div class="chat-message chat-message--assistant">
+            <div class="chat-message__body">
+              <p>
+                Hi. I can help with Atharva's work, background, projects, and how to reach him. What
+                would you like to know?
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-sidebar__composer">
+        <form class="chat-sidebar__form" data-chat-form>
+          <label class="sr-only" for="chat-input">Message</label>
+          <textarea
+            id="chat-input"
+            class="chat-sidebar__input"
+            data-chat-input
+            rows="3"
+            placeholder="Ask about his work, writing, or background…"
+            required
+          ></textarea>
+          <div class="chat-sidebar__actions">
+            <button type="submit" class="chat-sidebar__send" data-chat-send>Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { renderChatMarkdown } from '../lib/chat-markdown';
+
+  type ChatRole = 'user' | 'assistant';
+
+  type ChatMessage = {
+    role: ChatRole;
+    content: string;
+  };
+
+  const root = document.querySelector('[data-chat-root]');
+
+  if (root && !(root as HTMLElement).dataset.chatReady) {
+    (root as HTMLElement).dataset.chatReady = 'true';
+
+    const sidebar = root.querySelector('[data-chat-sidebar]') as HTMLElement;
+    const openButton = root.querySelector('[data-chat-open]') as HTMLButtonElement;
+    const closeButton = root.querySelector('[data-chat-close]') as HTMLButtonElement;
+    const form = root.querySelector('[data-chat-form]') as HTMLFormElement;
+    const input = root.querySelector('[data-chat-input]') as HTMLTextAreaElement;
+    const sendButton = root.querySelector('[data-chat-send]') as HTMLButtonElement;
+    const messages = root.querySelector('[data-chat-messages]') as HTMLElement;
+
+    const history: ChatMessage[] = [];
+    let isOpen = false;
+    let isSending = false;
+
+    function setOpen(next: boolean) {
+      isOpen = next;
+      sidebar.hidden = !next;
+      openButton.hidden = next;
+      openButton.setAttribute('aria-expanded', String(next));
+      document.body.classList.toggle('chat-open', next);
+
+      if (next) {
+        input.focus();
+      } else {
+        openButton.focus();
+      }
+    }
+
+    function appendMessage(role: ChatRole, content: string) {
+      const row = document.createElement('div');
+      row.className = `chat-row chat-row--${role}`;
+
+      const item = document.createElement('div');
+      item.className = `chat-message chat-message--${role}`;
+
+      const body = document.createElement('div');
+      body.className = 'chat-message__body';
+
+      if (role === 'assistant') {
+        body.innerHTML = renderChatMarkdown(content);
+      } else {
+        const paragraph = document.createElement('p');
+        paragraph.textContent = content;
+        body.appendChild(paragraph);
+      }
+
+      item.appendChild(body);
+      row.appendChild(item);
+      messages.appendChild(row);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function setLoading(loading: boolean) {
+      isSending = loading;
+      sendButton.disabled = loading;
+      input.disabled = loading;
+      sendButton.textContent = loading ? 'Sending…' : 'Send';
+    }
+
+    openButton.addEventListener('click', () => setOpen(true));
+    closeButton.addEventListener('click', () => setOpen(false));
+
+    sidebar.addEventListener('click', (event) => {
+      if (event.target === sidebar) {
+        setOpen(false);
+      }
+    });
+
+    root.querySelector('.chat-sidebar__panel')?.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isOpen) {
+        setOpen(false);
+      }
+    });
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const content = input.value.trim();
+      if (!content || isSending) {
+        return;
+      }
+
+      history.push({ role: 'user', content });
+      appendMessage('user', content);
+      input.value = '';
+      setLoading(true);
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: history }),
+        });
+
+        const data = (await response.json()) as { reply?: string; error?: string };
+
+        if (!response.ok || !data.reply) {
+          throw new Error(data.error ?? 'Request failed');
+        }
+
+        history.push({ role: 'assistant', content: data.reply });
+        appendMessage('assistant', data.reply);
+      } catch {
+        appendMessage(
+          'assistant',
+          'Sorry, I could not reach the assistant right now. Try again in a moment, or email Atharva directly.',
+        );
+      } finally {
+        setLoading(false);
+      }
+    });
+  }
+</script>

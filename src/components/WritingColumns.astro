@@ -1,0 +1,64 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { WRITING_SECTIONS } from '../consts';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+  limit?: number;
+  compact?: boolean;
+}
+
+const { posts, limit, compact = false } = Astro.props;
+
+const postsBySection = Object.fromEntries(
+  WRITING_SECTIONS.map((section) => [
+    section.id,
+    posts
+      .filter((post) => post.data.section === section.id)
+      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+      .slice(0, limit ?? posts.length),
+  ]),
+) as Record<(typeof WRITING_SECTIONS)[number]['id'], CollectionEntry<'blog'>[]>;
+---
+
+<div class:list={['writing-columns', { 'writing-columns--compact': compact }]}>
+  {
+    WRITING_SECTIONS.map((section, i) => (
+      <section
+        class={`writing-column fade-in fade-in--${Math.min(i + 2, 4)}`}
+        aria-labelledby={`section-${section.id}`}
+      >
+        <header class="writing-column__header">
+          <h3 id={`section-${section.id}`} class="writing-column__title">
+            {section.label}
+          </h3>
+          {!compact && <p class="writing-column__desc">{section.description}</p>}
+        </header>
+
+        {
+          postsBySection[section.id].length > 0 ? (
+            <ul class="writing-column__list">
+              {postsBySection[section.id].map((post) => (
+                <li class="writing-column__item">
+                  <time class="writing-column__date" datetime={post.data.pubDate.toISOString()}>
+                    {post.data.pubDate.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </time>
+                  <h3 class="writing-column__post-title">
+                    <a href={`/blog/${post.id}`}>{post.data.title}</a>
+                  </h3>
+                  {!compact && <p class="writing-column__excerpt">{post.data.description}</p>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="writing-column__empty">—</p>
+          )
+        }
+      </section>
+    ))
+  }
+</div>

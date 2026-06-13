@@ -1,0 +1,98 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+import { SITE, WRITING_SECTIONS } from '../../consts';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const section = WRITING_SECTIONS.find((entry) => entry.id === post.data.section);
+
+const publishedTime = post.data.pubDate.toISOString();
+const modifiedTime = (post.data.updatedDate ?? post.data.pubDate).toISOString();
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: publishedTime,
+  dateModified: modifiedTime,
+  author: {
+    '@type': 'Person',
+    name: SITE.author,
+    url: 'https://atharva.dev',
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': new URL(`/blog/${post.id}`, Astro.site).href,
+  },
+  keywords: post.data.tags.join(', '),
+};
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  publishedTime={publishedTime}
+  modifiedTime={modifiedTime}
+  tags={post.data.tags}
+  jsonLd={jsonLd}
+>
+  <article class="container">
+    <a href="/blog" class="back-link fade-in fade-in--1">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+      </svg>
+      Back to musings
+    </a>
+
+    <header class="article-header fade-in fade-in--2">
+      <h1 class="article-header__title">{post.data.title}</h1>
+      <p class="article-header__desc">{post.data.description}</p>
+    </header>
+
+    <div class="article-meta fade-in fade-in--2">
+      {
+        section && (
+          <>
+            <span>{section.label}</span>
+            <span class="article-meta__sep" aria-hidden="true">·</span>
+          </>
+        )
+      }
+      <time datetime={publishedTime}>
+        {
+          post.data.pubDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        }
+      </time>
+      {
+        post.data.tags.length > 0 && (
+          <>
+            <span class="article-meta__sep" aria-hidden="true">·</span>
+            <span>{post.data.tags.join(', ')}</span>
+          </>
+        )
+      }
+    </div>
+
+    <div class="prose fade-in fade-in--3">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

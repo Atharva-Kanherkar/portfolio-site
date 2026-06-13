@@ -1,0 +1,22 @@
+---
+import { PROJECTS } from '../projects';
+---
+
+<ul class="project-list">
+  {
+    PROJECTS.map((project, i) => {
+      const href = project.live ?? project.github;
+
+      return (
+        <li class={`project-list__item fade-in fade-in--${Math.min(i + 3, 4)}`}>
+          <h3 class="project-list__title">
+            <a href={href} rel="noopener noreferrer" target="_blank">
+              {project.name}
+            </a>
+          </h3>
+          <p class="project-list__desc">{project.description}</p>
+        </li>
+      );
+    })
+  }
+</ul>

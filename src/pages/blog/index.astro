@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WritingColumns from '../../components/WritingColumns.astro';
+import WritingIntro from '../../components/WritingIntro.astro';
+import { getCollection } from 'astro:content';
+
+export const prerender = true;
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+---
+
+<BaseLayout
+  title="Musings"
+  description="Musings on philosophy, computing, mathematics, and more."
+>
+  <section class="section container container--wide" aria-label="Musings">
+    <h1 class="sr-only">Musings</h1>
+    <WritingIntro showRss />
+    <WritingColumns posts={posts} />
+  </section>
+</BaseLayout>

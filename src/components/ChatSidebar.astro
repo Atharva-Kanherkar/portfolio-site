@@ -116,6 +116,33 @@
       scrollMessages();
     }
 
+    function createThinkingIndicator() {
+      const row = document.createElement('div');
+      row.className = 'chat-row chat-row--assistant';
+
+      const item = document.createElement('div');
+      item.className = 'chat-message chat-message--assistant chat-message--thinking';
+
+      const body = document.createElement('div');
+      body.className = 'chat-message__body';
+
+      const thinking = document.createElement('div');
+      thinking.className = 'chat-thinking';
+      thinking.setAttribute('aria-hidden', 'true');
+
+      const bar = document.createElement('div');
+      bar.className = 'chat-thinking__bar';
+      thinking.appendChild(bar);
+
+      body.appendChild(thinking);
+      item.appendChild(body);
+      row.appendChild(item);
+      messages.appendChild(row);
+      scrollMessages();
+
+      return { row };
+    }
+
     function createAssistantStreamMessage() {
       const row = document.createElement('div');
       row.className = 'chat-row chat-row--assistant';
@@ -150,58 +177,77 @@
     }
 
     async function streamAssistantReply() {
-      const { item, body, stream } = createAssistantStreamMessage();
+      const thinking = createThinkingIndicator();
+      let streamMessage: ReturnType<typeof createAssistantStreamMessage> | null = null;
       let reply = '';
       let frame: number | null = null;
 
       const renderStream = () => {
-        stream.textContent = reply;
-        scrollMessages();
+        if (streamMessage) {
+          streamMessage.stream.textContent = reply;
+          scrollMessages();
+        }
         frame = null;
       };
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
-      });
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: history }),
+        });
 
-      if (!response.ok || !response.body) {
-        item.remove();
-        throw new Error('Request failed');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
+        if (!response.ok || !response.body) {
+          throw new Error('Request failed');
         }
 
-        reply += decoder.decode(value, { stream: true });
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
 
-        if (frame === null) {
-          frame = requestAnimationFrame(renderStream);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          if (!streamMessage) {
+            thinking.row.remove();
+            streamMessage = createAssistantStreamMessage();
+          }
+
+          reply += decoder.decode(value, { stream: true });
+
+          if (frame === null) {
+            frame = requestAnimationFrame(renderStream);
+          }
         }
+
+        if (frame !== null) {
+          cancelAnimationFrame(frame);
+        }
+
+        reply = reply.trim();
+
+        if (!reply) {
+          streamMessage?.item.closest('.chat-row')?.remove();
+          throw new Error('Empty response');
+        }
+
+        if (!streamMessage) {
+          thinking.row.remove();
+          streamMessage = createAssistantStreamMessage();
+          streamMessage.stream.textContent = reply;
+        }
+
+        streamMessage.item.classList.remove('chat-message--streaming');
+        streamMessage.body.innerHTML = renderChatMarkdown(reply);
+        history.push({ role: 'assistant', content: reply });
+        scrollMessages();
+      } catch (error) {
+        thinking.row.remove();
+        streamMessage?.item.closest('.chat-row')?.remove();
+        throw error;
       }
-
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
-      }
-
-      reply = reply.trim();
-
-      if (!reply) {
-        item.remove();
-        throw new Error('Empty response');
-      }
-
-      item.classList.remove('chat-message--streaming');
-      body.innerHTML = renderChatMarkdown(reply);
-      history.push({ role: 'assistant', content: reply });
-      scrollMessages();
     }
 
     openButton.addEventListener('click', () => setOpen(true));

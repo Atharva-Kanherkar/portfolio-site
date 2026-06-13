@@ -1176,6 +1176,43 @@ body.chat-open {
   word-break: break-word;
 }
 
+.chat-message--thinking {
+  padding: 0.85rem 1rem;
+}
+
+.chat-thinking {
+  width: 100%;
+  max-width: 5rem;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(28, 25, 23, 0.08);
+  overflow: hidden;
+}
+
+.chat-thinking__bar {
+  width: 45%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  animation: chat-thinking-slide 1.15s ease-in-out infinite;
+}
+
+@keyframes chat-thinking-slide {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(280%);
+    opacity: 0.35;
+  }
+}
+
 .chat-message--streaming .chat-message__stream::after {
   content: '';
   display: inline-block;

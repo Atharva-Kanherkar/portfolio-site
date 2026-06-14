@@ -956,6 +956,10 @@ article.container {
   .site-nav a::after {
     transition: none;
   }
+
+  .chat-thinking__dot {
+    animation-name: chat-thinking-pulse;
+  }
 }
 
 @media (max-width: 720px) {
@@ -1310,35 +1314,50 @@ body.chat-open {
 }
 
 .chat-thinking {
-  width: 100%;
-  max-width: 5rem;
-  height: 3px;
-  border-radius: 999px;
-  background: var(--rule);
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 1rem;
 }
 
-.chat-thinking__bar {
-  width: 45%;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent);
-  animation: chat-thinking-slide 1.15s ease-in-out infinite;
+.chat-thinking__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  animation: chat-thinking-bounce 1.3s ease-in-out infinite;
 }
 
-@keyframes chat-thinking-slide {
-  0% {
-    transform: translateX(-120%);
-    opacity: 0.35;
+.chat-thinking__dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.chat-thinking__dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes chat-thinking-bounce {
+  0%,
+  70%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translateY(-0.22rem);
+  }
+}
+
+@keyframes chat-thinking-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
   }
 
   50% {
     opacity: 1;
-  }
-
-  100% {
-    transform: translateX(280%);
-    opacity: 0.35;
   }
 }
 

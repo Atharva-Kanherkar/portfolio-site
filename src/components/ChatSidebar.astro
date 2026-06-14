@@ -130,9 +130,11 @@
       thinking.className = 'chat-thinking';
       thinking.setAttribute('aria-hidden', 'true');
 
-      const bar = document.createElement('div');
-      bar.className = 'chat-thinking__bar';
-      thinking.appendChild(bar);
+      for (let i = 0; i < 3; i += 1) {
+        const dot = document.createElement('span');
+        dot.className = 'chat-thinking__dot';
+        thinking.appendChild(dot);
+      }
 
       body.appendChild(thinking);
       item.appendChild(body);

@@ -38,7 +38,7 @@ const { title, description, image, type, publishedTime, modifiedTime, tags, json
     <Analytics mode="production" />
   </head>
   <body>
-    <div class="page-shell" transition:animate="fade">
+    <div class="page-shell">
       <Header />
       <main>
         <slot />
@@ -90,11 +90,11 @@ const { title, description, image, type, publishedTime, modifiedTime, tags, json
   }
 
   ::view-transition-old(root) {
-    animation: astroFadeOut 0.2s ease-out both;
+    animation: astroFadeOut 0.1s ease-out both;
   }
 
   ::view-transition-new(root) {
-    animation: astroFadeIn 0.25s ease-out both;
+    animation: astroFadeIn 0.1s ease-out both;
   }
 
   @media (prefers-reduced-motion: reduce) {

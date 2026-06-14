@@ -4,10 +4,12 @@ import vercel from '@astrojs/vercel';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://atharva.dev',
+  site: 'https://www.atharvakanherkar.com',
   output: 'server',
   adapter: vercel(),
   integrations: [sitemap()],
+  // Prefetch internal links on hover so plain (non-SPA) navigation feels instant.
+  prefetch: { prefetchAll: true },
   fonts: [
     {
       name: 'Geist',

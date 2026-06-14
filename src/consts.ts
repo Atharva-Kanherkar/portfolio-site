@@ -2,7 +2,7 @@ export const SITE = {
   title: 'Atharva',
   description:
     'Curious engineer in open source. Musings on software, philosophy, and the work of understanding.',
-  url: 'https://atharva.dev',
+  url: 'https://www.atharvakanherkar.com',
   author: 'Atharva',
   twitter: '@attharrva15',
   github: 'https://github.com/Atharva-Kanherkar',

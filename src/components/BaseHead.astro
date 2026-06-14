@@ -1,4 +1,5 @@
 ---
+import { Font } from 'astro:assets';
 import { SITE } from '../consts';
 
 interface Props {
@@ -48,7 +49,29 @@ const structuredData = jsonLd ?? defaultJsonLd;
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="generator" content={Astro.generator} />
-<meta name="theme-color" content="#f6f2eb" />
+
+<Font cssVariable="--font-sans" preload />
+<Font cssVariable="--font-mono" />
+
+<meta name="theme-color" content="#fbfaf8" />
+<script is:inline>
+  // Apply the persisted theme before first paint (no flash). System preference
+  // is handled by CSS media queries, so only an explicit override is stamped here.
+  // Hex literals mirror THEME_COLOR in src/consts.ts (inline scripts can't import).
+  (() => {
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || stored === 'light') {
+        document.documentElement.dataset.theme = stored;
+      }
+      const isDark = stored
+        ? stored === 'dark'
+        : matchMedia('(prefers-color-scheme: dark)').matches;
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', isDark ? '#131311' : '#fbfaf8');
+    } catch (e) {}
+  })();
+</script>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="canonical" href={canonicalURL} />

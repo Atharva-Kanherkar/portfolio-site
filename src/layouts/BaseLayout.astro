@@ -46,6 +46,27 @@ const { title, description, image, type, publishedTime, modifiedTime, tags, json
       <Footer />
     </div>
     <ChatSidebar />
+
+    <script>
+      import { THEME_COLOR } from '../consts';
+
+      // ClientRouter resets <html> attributes on swap, so re-apply the persisted
+      // theme after the DOM swap but before paint to avoid a flash on navigation.
+      document.addEventListener('astro:after-swap', () => {
+        const stored = localStorage.getItem('theme');
+        const root = document.documentElement;
+        if (stored === 'dark' || stored === 'light') {
+          root.dataset.theme = stored;
+        } else {
+          delete root.dataset.theme;
+        }
+        const isDark = stored
+          ? stored === 'dark'
+          : matchMedia('(prefers-color-scheme: dark)').matches;
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', isDark ? THEME_COLOR.dark : THEME_COLOR.light);
+      });
+    </script>
   </body>
 </html>
 

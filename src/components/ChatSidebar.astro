@@ -61,9 +61,9 @@
     content: string;
   };
 
-  const root = document.querySelector('[data-chat-root]');
-
-  if (root && !(root as HTMLElement).dataset.chatReady) {
+  function initChat() {
+    const root = document.querySelector('[data-chat-root]');
+    if (!root || (root as HTMLElement).dataset.chatReady) return;
     (root as HTMLElement).dataset.chatReady = 'true';
 
     const sidebar = root.querySelector('[data-chat-sidebar]') as HTMLElement;
@@ -263,7 +263,7 @@
       event.stopPropagation();
     });
 
-    document.addEventListener('keydown', (event) => {
+    sidebar.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && isOpen) {
         setOpen(false);
       }
@@ -301,4 +301,6 @@
       }
     });
   }
+
+  document.addEventListener('astro:page-load', initChat);
 </script>

@@ -15,6 +15,14 @@ export const SITE = {
   ogImageHeight: 630,
 } as const;
 
+// Browser chrome color per theme. Mirrors --paper in src/styles/global.css.
+// The inline no-flash script in BaseHead duplicates these literals (it cannot
+// import a module); keep all three in sync if the paper tokens change.
+export const THEME_COLOR = {
+  light: '#fbfaf8',
+  dark: '#131311',
+} as const;
+
 export const WRITING_SECTIONS = [
   {
     id: 'vedanta',

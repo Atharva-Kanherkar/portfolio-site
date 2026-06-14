@@ -26,4 +26,99 @@ const links = [
       }
     </ul>
   </nav>
+
+  <div class="site-header__right">
+    <a class="site-name" href="/">{SITE.author}</a>
+    <button
+      type="button"
+      class="theme-toggle"
+      data-theme-toggle
+      aria-pressed="false"
+      aria-label="Switch to dark theme"
+    >
+      <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      <svg
+        class="theme-toggle__moon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+      <svg
+        class="theme-toggle__sun"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="4"></circle>
+        <path
+          d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+        ></path>
+      </svg>
+    </button>
+  </div>
 </header>
+
+<script>
+  import { THEME_COLOR } from '../consts';
+
+  type Theme = 'light' | 'dark';
+
+  function currentTheme(): Theme {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark' || stored === 'light') return stored;
+    return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme: Theme) {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? THEME_COLOR.dark : THEME_COLOR.light);
+  }
+
+  function syncButton(btn: HTMLElement, theme: Theme) {
+    const isDark = theme === 'dark';
+    btn.setAttribute('aria-pressed', String(isDark));
+    const label = isDark ? 'Switch to light theme' : 'Switch to dark theme';
+    btn.setAttribute('aria-label', label);
+    const sr = btn.querySelector('[data-theme-label]');
+    if (sr) sr.textContent = label;
+  }
+
+  function initThemeToggle() {
+    const btn = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+    if (!btn || btn.dataset.themeReady) return; // fresh button each nav → binds once
+    btn.dataset.themeReady = 'true';
+
+    syncButton(btn, currentTheme());
+
+    btn.addEventListener('click', () => {
+      const next: Theme = currentTheme() === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', next);
+      applyTheme(next);
+      syncButton(btn, next);
+    });
+  }
+
+  // Follow OS changes only while the visitor hasn't made an explicit choice.
+  // Registered once at module scope (this script runs a single time).
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+    if (localStorage.getItem('theme')) return;
+    const sys: Theme = event.matches ? 'dark' : 'light';
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', sys === 'dark' ? THEME_COLOR.dark : THEME_COLOR.light);
+    const btn = document.querySelector<HTMLElement>('[data-theme-toggle]');
+    if (btn) syncButton(btn, sys);
+  });
+
+  document.addEventListener('astro:page-load', initThemeToggle);
+</script>

@@ -1,0 +1,58 @@
+---
+import StudioLayout from '../../../layouts/StudioLayout.astro';
+import Editor from '../../../studio/Editor.tsx';
+import { getEntry } from 'astro:content';
+import { getDraft } from '@studio/drafts';
+import { emptyFrontmatter, type Frontmatter } from '@studio/types';
+
+export const prerender = false;
+
+const raw = Astro.params.slug ?? 'new';
+const [kind, ...rest] = raw.split('/');
+const id = rest.join('/');
+
+let initialMarkdown = '';
+let initialFrontmatter: Frontmatter = emptyFrontmatter();
+let draftId: string | undefined;
+let publishSlug: string | undefined;
+let initialPubDate: string | undefined;
+
+if (kind === 'draft' && id) {
+  try {
+    const draft = await getDraft(id);
+    if (draft) {
+      initialMarkdown = draft.markdown;
+      initialFrontmatter = draft.frontmatter;
+      draftId = draft.id;
+      publishSlug = draft.publishedSlug;
+    }
+  } catch {
+    /* Blob unavailable — start fresh */
+  }
+} else if (kind === 'post' && id) {
+  const post = await getEntry('blog', id);
+  if (post) {
+    initialMarkdown = post.body ?? '';
+    initialFrontmatter = {
+      title: post.data.title,
+      description: post.data.description,
+      section: post.data.section,
+      tags: post.data.tags ?? [],
+    };
+    publishSlug = id;
+    initialPubDate = post.data.pubDate.toISOString().slice(0, 10);
+  }
+}
+---
+
+<StudioLayout title="Studio — Editor">
+  <Editor
+    client:only="react"
+    slug={raw}
+    initialMarkdown={initialMarkdown}
+    initialFrontmatter={initialFrontmatter}
+    draftId={draftId}
+    publishSlug={publishSlug}
+    initialPubDate={initialPubDate}
+  />
+</StudioLayout>

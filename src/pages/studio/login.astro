@@ -1,0 +1,93 @@
+---
+import StudioLayout from '../../layouts/StudioLayout.astro';
+
+export const prerender = false;
+
+const denied = Astro.url.searchParams.get('error') === 'denied';
+---
+
+<StudioLayout title="Studio — Sign in">
+  <main class="login">
+    <div class="login__card">
+      <p class="login__eyebrow">Studio</p>
+      <h1 class="login__title">Sign in</h1>
+      <p class="login__sub">A private writing studio. Only the owner can enter.</p>
+
+      {denied && <p class="login__error">That account isn't authorized.</p>}
+
+      <a class="login__btn" href="/api/studio/auth/login" rel="nofollow">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor">
+          <path
+            d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-1.7c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5Z"
+          ></path>
+        </svg>
+        Sign in with GitHub
+      </a>
+    </div>
+  </main>
+
+  <style>
+    .login {
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: var(--space-lg);
+    }
+
+    .login__card {
+      width: min(24rem, 100%);
+      text-align: center;
+    }
+
+    .login__eyebrow {
+      font-size: var(--text-sm);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      margin: 0 0 var(--space-sm);
+    }
+
+    .login__title {
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      letter-spacing: -0.022em;
+      margin: 0 0 var(--space-xs);
+    }
+
+    .login__sub {
+      color: var(--ink-soft);
+      margin: 0 0 var(--space-lg);
+      line-height: 1.6;
+    }
+
+    .login__error {
+      color: var(--ink);
+      background: var(--paper-deep);
+      border: 1px solid var(--rule-strong);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      font-size: var(--text-sm);
+      margin: 0 0 var(--space-md);
+    }
+
+    .login__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      border: 1px solid var(--ink);
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      padding: 0.7rem 1.25rem;
+      text-decoration: none;
+      transition: opacity 0.2s var(--ease-out);
+    }
+
+    .login__btn:hover {
+      opacity: 0.85;
+    }
+  </style>
+</StudioLayout>

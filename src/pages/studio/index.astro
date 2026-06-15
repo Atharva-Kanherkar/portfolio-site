@@ -1,0 +1,164 @@
+---
+import StudioLayout from '../../layouts/StudioLayout.astro';
+import { getCollection } from 'astro:content';
+import { listDrafts, type DraftSummary } from '@studio/drafts';
+import { WRITING_SECTIONS } from '../../consts';
+
+export const prerender = false;
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+let drafts: DraftSummary[] = [];
+try {
+  drafts = await listDrafts();
+} catch {
+  /* Blob not configured locally */
+}
+
+const labelFor = (id: string) => WRITING_SECTIONS.find((s) => s.id === id)?.label ?? id;
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+---
+
+<StudioLayout title="Studio">
+  <div class="dash">
+    <header class="dash__head">
+      <h1 class="dash__h1">Studio</h1>
+      <div class="dash__actions">
+        <a class="dash__new" href="/studio/edit/new">New post</a>
+        <a class="dash__logout" href="/api/studio/auth/logout">Sign out</a>
+      </div>
+    </header>
+
+    {
+      drafts.length > 0 && (
+        <section class="dash__section">
+          <h2 class="dash__h2">Drafts</h2>
+          <ul class="dash__list">
+            {drafts.map((d) => (
+              <li>
+                <a href={`/studio/edit/draft/${d.id}`}>
+                  <span class="dash__title">{d.title}</span>
+                  <span class="dash__meta">{labelFor(d.section)} · draft</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section class="dash__section">
+      <h2 class="dash__h2">Published</h2>
+      {
+        posts.length === 0 ? (
+          <p class="dash__empty">No posts yet. Start with “New post”.</p>
+        ) : (
+          <ul class="dash__list">
+            {posts.map((p) => (
+              <li>
+                <a href={`/studio/edit/post/${p.id}`}>
+                  <span class="dash__title">{p.data.title}</span>
+                  <span class="dash__meta">
+                    {labelFor(p.data.section)} · {fmtDate(p.data.pubDate)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+
+  <style>
+    .dash {
+      width: min(100%, 44rem);
+      margin: 0 auto;
+      padding: var(--space-xl) var(--page-gutter) var(--space-2xl);
+    }
+    .dash__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+    .dash__h1 {
+      font: 600 var(--text-2xl) / 1.1 var(--font-sans);
+      letter-spacing: -0.022em;
+      margin: 0;
+    }
+    .dash__actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .dash__new {
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+      border-radius: 999px;
+      padding: 0.5rem 1.1rem;
+      font: 500 var(--text-sm) / 1 var(--font-sans);
+      text-decoration: none;
+    }
+    .dash__new:hover {
+      opacity: 0.85;
+    }
+    .dash__logout {
+      color: var(--ink-muted);
+      font-size: var(--text-sm);
+      text-decoration: none;
+    }
+    .dash__logout:hover {
+      color: var(--ink);
+    }
+    .dash__section {
+      margin-bottom: var(--space-xl);
+    }
+    .dash__h2 {
+      font: 500 0.8125rem / 1 var(--font-sans);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      margin: 0 0 var(--space-md);
+    }
+    .dash__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0;
+    }
+    .dash__list li {
+      border-bottom: 1px solid var(--rule);
+    }
+    .dash__list a {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      text-decoration: none;
+      color: var(--ink);
+    }
+    .dash__title {
+      font: 500 var(--text-base) / 1.3 var(--font-sans);
+    }
+    .dash__list a:hover .dash__title {
+      text-decoration: underline;
+      text-underline-offset: 0.18em;
+    }
+    .dash__meta {
+      flex-shrink: 0;
+      font-size: var(--text-sm);
+      color: var(--ink-muted);
+    }
+    .dash__empty {
+      color: var(--ink-muted);
+    }
+  </style>
+</StudioLayout>

@@ -2,6 +2,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, render } from 'astro:content';
 import { SITE, WRITING_SECTIONS } from '../../consts';
+// KaTeX styles for math in posts — scoped to article pages only.
+import 'katex/dist/katex.min.css';
 
 export const prerender = true;
 

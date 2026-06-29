@@ -33,6 +33,18 @@ export const PROJECTS: Project[] = [
     live: 'https://memory.agentclash.dev',
   },
   {
+    name: 'datasmith',
+    description:
+      'Provider-agnostic SDK and CLI for building targeted synthetic training and eval datasets — web-grounded seed construction feeding a weak-vs-strong generation loop, with OpenTelemetry trace ingestion.',
+    github: 'https://github.com/Atharva-Kanherkar/datasmith',
+  },
+  {
+    name: 'labclaw',
+    description:
+      'Always-on AI scientist that fact-checks new ML/code claims — reads the paper and figures, runs a small VM experiment, and reports whether the claim reproduces.',
+    github: 'https://github.com/Atharva-Kanherkar/labclaw',
+  },
+  {
     name: 'e2b-go',
     description: 'Unofficial Go SDK for E2B sandboxes.',
     github: 'https://github.com/Atharva-Kanherkar/e2b-go',

@@ -39,10 +39,11 @@ export const PROJECTS: Project[] = [
     github: 'https://github.com/Atharva-Kanherkar/datasmith',
   },
   {
-    name: 'labclaw',
+    name: 'AnimeVocab',
     description:
-      'Always-on AI scientist that fact-checks new ML/code claims — reads the paper and figures, runs a small VM experiment, and reports whether the claim reproduces.',
-    github: 'https://github.com/Atharva-Kanherkar/labclaw',
+      'Learn Japanese from anime — romaji-first Chrome extension, spaced repetition, Listening Mode, Manga Studio, and cloud sync. Free and open source.',
+    github: 'https://github.com/Atharva-Kanherkar/anime-vocab-coach',
+    live: 'https://animevocab.com',
   },
   {
     name: 'e2b-go',

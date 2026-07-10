@@ -47,6 +47,23 @@ const chartData = board.map((r) => ({
   total: r.total,
   rage: r.rage,
 }));
+
+// Receipts. Real messages, verbatim, typos intact, uncensored. This is what
+// "crashout" actually looked like.
+const receipts = [
+  { quote: 'What the fuck man. Are you like really dumb? What effort would it have taken for you to crop those images and the music i told you too, push the gap longer, and render. are you like just a fucking lazy sick fuck?', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'character assassination' },
+  { quote: "its a fucking hobby project. why the fuck are you questioning me like yourte my fucking boss? just askewd the rimo part bcs maybe we could intergaste", model: 'gpt-5.x', tool: 'Codex', color: '#10a37f', tag: 'unhinged' },
+  { quote: 'Really? Whatt the fck is this? there are still emojis. What inthe fuck is thius man', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'emoji rage' },
+  { quote: 'its been 9 mins what u doing ??', model: 'gpt-5.x', tool: 'Codex', color: '#10a37f', tag: 'the waiting' },
+  { quote: 'Dont fucking school me. Tell me eqach last commit how latest they were and trrhat is your job.', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'do your job' },
+  { quote: 'So were thee fuck is my code?', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'existential' },
+  { quote: 'U added gradients agauin, That is so stpd. Waht theufck is the whole deisgn it looks liek absosltue clown show', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'clown show' },
+  { quote: 'Wtf is that color lmfao. it looks usper crigne and i cnat evene rerwad it', model: 'claude-fable-5', tool: 'Claude Code', color: '#8a6fc8', tag: 'design crimes' },
+  { quote: 'You pushed without my permissions, andmain is failing right now. PLease fix it asap.', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'betrayal' },
+  { quote: 'please edit the PR. no commentrs. do not act like you are a fool', model: 'gpt-5.x', tool: 'Codex', color: '#10a37f', tag: 'condescension arc' },
+  { quote: 'Just tell me how much time before each eprson pushed the develop branch you dumass.', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'name-calling' },
+  { quote: 'Can you not generate scripts better just use a subagent... fuzzy logic or matching wont result in semantic meanings', model: 'claude-haiku-4-5', tool: 'Claude Code', color: '#b0578d', tag: 'the one (1) time i stayed calm' },
+];
 ---
 
 <BaseLayout
@@ -167,6 +184,30 @@ const chartData = board.map((r) => ({
             mildly annoyed once. Either it's perfect or it's studying me. I don't like it.
           </p>
         </li>
+      </ul>
+    </section>
+
+    <section class="cb__receipts" aria-labelledby="receipts-title">
+      <h2 id="receipts-title" class="cb__section-title">Receipts</h2>
+      <p class="cb__note">
+        The actual messages. Verbatim, typos included (I was typing angry), nothing censored. Not my
+        proudest work. Sorted by roughly how much I'd like to take them back.
+      </p>
+      <ul class="receipts">
+        {
+          receipts.map((r) => (
+            <li class="receipt" style={`--c:${r.color}`}>
+              <span class="receipt__mark" aria-hidden="true">&ldquo;</span>
+              <blockquote class="receipt__quote">{r.quote}</blockquote>
+              <p class="receipt__attr">
+                <span class="receipt__dot" style={`background:${r.color}`} />
+                <span class="receipt__model">{r.model}</span>
+                <span class="receipt__tool">{r.tool}</span>
+                <span class="receipt__tag">{r.tag}</span>
+              </p>
+            </li>
+          ))
+        }
       </ul>
     </section>
 
@@ -593,6 +634,105 @@ const chartData = board.map((r) => ({
   .take strong {
     color: var(--ink);
     font-weight: 600;
+  }
+
+  /* receipts (crashout cards) */
+  .cb__receipts {
+    margin-top: 0;
+  }
+
+  .receipts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    columns: 3 16rem;
+    column-gap: var(--space-md);
+  }
+
+  .receipt {
+    break-inside: avoid;
+    position: relative;
+    margin: 0 0 var(--space-md);
+    padding: var(--space-md) var(--space-md) calc(var(--space-md) - 0.2rem);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--c);
+    border-radius: 8px;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    overflow: hidden;
+  }
+
+  .receipt::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--c);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s var(--ease-out);
+  }
+
+  .receipt:hover::after {
+    opacity: 0.05;
+  }
+
+  .receipt__mark {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.5rem;
+    line-height: 0.4;
+    height: 0.9rem;
+    color: var(--c);
+    opacity: 0.55;
+  }
+
+  .receipt__quote {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .receipt__attr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding-top: 0.2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .receipt__dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .receipt__model {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+  }
+
+  .receipt__tool {
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .receipt__tag {
+    margin-left: auto;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--c);
+    font-weight: 500;
   }
 
   .cb__method {

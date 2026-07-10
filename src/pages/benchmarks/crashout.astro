@@ -1,0 +1,615 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export const prerender = true;
+
+// The CrashoutBench. A leaderboard of me getting cooked by AI models until I
+// type like I'm having a public breakdown. 11,787 of my messages were read one
+// by one (no keyword matching) and the genuine crashouts pulled out. Scored by
+// TWO independent judges, Claude (opus-4-8) and Codex (gpt-5.5), and averaged,
+// so no single model gets to grade its own homework.
+//
+// Scores are the mean of both judges, per model.
+
+type Row = {
+  model: string;
+  tool: string;
+  color: string;
+  total: number;
+  n: number; // averaged tantrums
+  claudeN: number;
+  codexN: number;
+  rage: number; // averaged full meltdowns (3/3)
+  rate: number; // n per 1000 msgs
+};
+
+const rows: Row[] = [
+  { model: 'gpt-5.x', tool: 'Codex', color: '#10a37f', total: 889, n: 12, claudeN: 13, codexN: 11, rage: 2, rate: 13.5 },
+  { model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', total: 7143, n: 64.5, claudeN: 67, codexN: 62, rage: 4, rate: 9.0 },
+  { model: 'claude-sonnet-4-6', tool: 'Claude Code', color: '#4a8fe2', total: 629, n: 3, claudeN: 3, codexN: 3, rage: 0, rate: 4.8 },
+  { model: 'claude-fable-5', tool: 'Claude Code', color: '#8a6fc8', total: 846, n: 4, claudeN: 4, codexN: 4, rage: 0, rate: 4.7 },
+  { model: 'claude-haiku-4-5', tool: 'Claude Code', color: '#b0578d', total: 2280, n: 1, claudeN: 1, codexN: 1, rage: 0, rate: 0.4 },
+];
+
+const board = [...rows].sort((a, b) => b.rate - a.rate);
+const totalReviewed = rows.reduce((s, r) => s + r.total, 0);
+const flaggedCount = 88; // Claude's first-pass flags
+const agreedCount = 81; // Codex confirmed
+const fmtN = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+
+// data the chart script needs (colors + numbers), theme-independent
+const chartData = board.map((r) => ({
+  model: r.model,
+  tool: r.tool,
+  color: r.color,
+  rate: r.rate,
+  n: r.n,
+  total: r.total,
+  rage: r.rage,
+}));
+---
+
+<BaseLayout
+  title="CrashoutBench"
+  description="A leaderboard of me getting absolutely cooked by AI models until I start typing like I'm having a public breakdown. 11,787 messages read, the 88 genuine crashouts pulled out, models ranked by how fast they made it happen."
+>
+  <article class="cb container container--wide">
+    <header class="cb__head">
+      <p class="eyebrow">The one benchmark where I'm the one being tested</p>
+      <h1 class="cb__title">The CrashoutBench</h1>
+      <div class="cb__lede prose">
+        <p>
+          This is a leaderboard of me getting absolutely cooked by AI models until I start typing
+          like I'm having a public breakdown.
+        </p>
+        <p>
+          <strong>{totalReviewed.toLocaleString()}</strong> messages. They read every single one.
+          Pulled out the exact <strong>{flaggedCount}</strong> times I lost control and started
+          going full fucking feral on these things.
+        </p>
+        <p>
+          No filters. No mercy. Just agents reading my unfiltered crashouts and ranking the models
+          by how fast they made it happen. Then a second model (a different one, from a rival lab)
+          re-graded the whole thing so I couldn't be accused of playing favourites.
+        </p>
+      </div>
+      <dl class="cb__meta">
+        <div><dt>Messages read</dt><dd>{totalReviewed.toLocaleString()}</dd></div>
+        <div><dt>Times I crashed out</dt><dd>{flaggedCount}</dd></div>
+        <div><dt>Tools involved</dt><dd>3</dd></div>
+        <div><dt>Regrets</dt><dd>0</dd></div>
+      </dl>
+    </header>
+
+    <section aria-labelledby="chart-title">
+      <h2 id="chart-title" class="cb__section-title">Ranked by how fast they made me lose my mind</h2>
+      <p class="cb__note">
+        Rage rate is crashouts per 1,000 messages. Raw count would just crown whatever model I use
+        most, which is a diary, not a benchmark. Hover a bar for the damage report.
+      </p>
+      <div class="cb__chartbox">
+        <svg id="cb-chart" role="img" aria-label="Rage rate per 1,000 messages by model"></svg>
+        <div id="cb-tip" class="cb__tip" hidden></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="board-title">
+      <h2 id="board-title" class="cb__section-title">The full damage report</h2>
+      <div class="cb__scroll">
+        <table class="cb__table">
+          <thead>
+            <tr>
+              <th class="c">#</th>
+              <th class="l">Model</th>
+              <th class="l">Tool</th>
+              <th class="l">Rage / 1k</th>
+              <th class="c">Tantrums</th>
+              <th class="c">Messages</th>
+              <th class="c">Full&nbsp;meltdowns</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              board.map((r, i) => (
+                <tr>
+                  <td class="rank">{i + 1}</td>
+                  <td class="model">
+                    <span class="dot" style={`background:${r.color}`} />
+                    <span class="model__name">{r.model}</span>
+                  </td>
+                  <td class="tool">{r.tool}</td>
+                  <td class="rate">
+                    <span class="barwrap">
+                      <span
+                        class="bar"
+                        style={`width:${((r.rate / board[0].rate) * 100).toFixed(1)}%;background:${r.color}`}
+                      />
+                    </span>
+                    <span class="rate__val">{r.rate.toFixed(1)}</span>
+                  </td>
+                  <td class="c num strong">{fmtN(r.n)}</td>
+                  <td class="c num dim">{r.total.toLocaleString()}</td>
+                  <td class="c num">{r.rage || <span class="zero">·</span>}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="cb__judges">
+        Every score is the average of two independent judges. Claude opus-4-8 flagged
+        <strong> {flaggedCount}</strong> crashouts; Codex gpt-5.5 then re-read every one blind and
+        agreed on <strong>{agreedCount}</strong>, so the averaged tantrum counts land around 84.
+        Letting a rival lab's model re-grade is the whole point, and it barely flinched: gpt-5.x
+        still tops its own leaderboard.
+      </p>
+    </section>
+
+    <section class="cb__takes" aria-labelledby="takes-title">
+      <h2 id="takes-title" class="cb__section-title">The takes</h2>
+      <ul class="takes">
+        <li class="take" style="--c:#10a37f">
+          <p>
+            <strong>gpt-5.x is actually evil.</strong> Highest rage rate by a mile. That model
+            doesn't even try to be helpful, it just exists to make me type in all caps like a
+            fucking lunatic.
+          </p>
+        </li>
+        <li class="take" style="--c:#d97e55">
+          <p>
+            <strong>Opus has the highest body count</strong> because I keep going back like an
+            idiot. Sixty-something times. That's not a model, that's my toxic ex.
+          </p>
+        </li>
+        <li class="take" style="--c:#b0578d">
+          <p>
+            <strong>Haiku is actually terrifying.</strong> 2,280 messages and it only made me
+            mildly annoyed once. Either it's perfect or it's studying me. I don't like it.
+          </p>
+        </li>
+      </ul>
+    </section>
+
+    <footer class="cb__method">
+      <h2 class="cb__section-title">How this was made (for the nerds)</h2>
+      <p>
+        Every JSONL transcript under Claude Code and Codex, plus Cursor's chat sessions, was parsed
+        for messages I actually typed, each tagged with the model that answered. Twelve agents read
+        all {totalReviewed.toLocaleString()} of them and flagged genuine crashouts: real anger,
+        swearing out of frustration, caps-lock shouting, or being fully done with the agent. Never a
+        keyword hit. Then a second judge (Codex gpt-5.5) re-graded every flagged message blind, and
+        the two scores were averaged per model. Ranked by crashouts per 1,000 messages, categorised
+        by model across all three tools. Cursor contributed one usable message and zero crashouts,
+        so, respect.
+      </p>
+    </footer>
+  </article>
+</BaseLayout>
+
+<script define:vars={{ chartData }}>
+  const svg = document.getElementById('cb-chart');
+  const tip = document.getElementById('cb-tip');
+  const NS = 'http://www.w3.org/2000/svg';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const el = (t, a) => {
+    const n = document.createElementNS(NS, t);
+    for (const k in a) n.setAttribute(k, a[k]);
+    return n;
+  };
+  const cssv = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  function draw() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const wide = window.innerWidth > 640;
+    const W = 960;
+    const rowH = wide ? 62 : 70;
+    const padT = 28;
+    const padB = 34;
+    const labelW = wide ? 210 : 150;
+    const valW = 64;
+    const H = padT + padB + chartData.length * rowH;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('height', H);
+
+    const ink = cssv('--ink');
+    const sub = cssv('--ink-muted');
+    const faint = cssv('--ink-faint');
+    const rule = cssv('--rule');
+    const x0 = labelW;
+    const x1 = W - valW;
+    const maxRate = Math.max(...chartData.map((d) => d.rate));
+    const scale = (v) => (v / maxRate) * (x1 - x0);
+
+    // gridlines + axis ticks
+    const ticks = 4;
+    for (let i = 0; i <= ticks; i++) {
+      const gx = x0 + ((x1 - x0) * i) / ticks;
+      svg.appendChild(el('line', { x1: gx, y1: padT - 8, x2: gx, y2: H - padB, stroke: rule, 'stroke-width': 1 }));
+      const t = el('text', { x: gx, y: H - padB + 20, fill: faint, 'font-size': 12, 'text-anchor': 'middle' });
+      t.textContent = ((maxRate * i) / ticks).toFixed(1);
+      t.setAttribute('font-family', 'var(--font-mono)');
+      svg.appendChild(t);
+    }
+    const axLabel = el('text', { x: (x0 + x1) / 2, y: H - 6, fill: sub, 'font-size': 11, 'text-anchor': 'middle', 'letter-spacing': '0.12em' });
+    axLabel.textContent = 'CRASHOUTS PER 1,000 MESSAGES';
+    axLabel.setAttribute('font-family', 'var(--font-mono)');
+    svg.appendChild(axLabel);
+
+    chartData.forEach((d, i) => {
+      const cy = padT + i * rowH + rowH / 2;
+      const bh = wide ? 26 : 30;
+      const full = scale(d.rate);
+
+      // model label
+      const lbl = el('text', { x: x0 - 14, y: cy - 3, fill: ink, 'font-size': wide ? 15 : 13, 'text-anchor': 'end' });
+      lbl.textContent = d.model;
+      lbl.setAttribute('font-family', 'var(--font-mono)');
+      lbl.setAttribute('font-weight', '500');
+      svg.appendChild(lbl);
+      const sub2 = el('text', { x: x0 - 14, y: cy + 14, fill: faint, 'font-size': 11, 'text-anchor': 'end' });
+      sub2.textContent = d.tool;
+      svg.appendChild(sub2);
+
+      // track
+      svg.appendChild(el('rect', { x: x0, y: cy - bh / 2, width: x1 - x0, height: bh, rx: bh / 2, fill: cssv('--paper-deep') }));
+
+      // bar
+      const bar = el('rect', { x: x0, y: cy - bh / 2, width: reduce ? full : 0, height: bh, rx: bh / 2, fill: d.color });
+      bar.style.cursor = 'pointer';
+      svg.appendChild(bar);
+      if (!reduce) {
+        requestAnimationFrame(() => {
+          bar.style.transition = `width 0.9s cubic-bezier(0.22,1,0.36,1) ${i * 0.08}s`;
+          bar.setAttribute('width', full);
+        });
+      }
+
+      // value
+      const val = el('text', { x: x1 + 10, y: cy + 5, fill: ink, 'font-size': 17, 'font-weight': 600 });
+      val.textContent = d.rate.toFixed(1);
+      val.setAttribute('font-family', 'var(--font-mono)');
+      svg.appendChild(val);
+
+      // hover hit area
+      const hit = el('rect', { x: x0, y: cy - rowH / 2, width: x1 - x0, height: rowH, fill: 'transparent' });
+      hit.style.cursor = 'pointer';
+      const show = (e) => {
+        tip.innerHTML =
+          `<span class="cb__tip-model" style="color:${d.color}">${d.model}</span>` +
+          `<span class="cb__tip-tool">${d.tool}</span>` +
+          `<span class="cb__tip-row"><b>${d.rate.toFixed(1)}</b> crashouts / 1k msgs</span>` +
+          `<span class="cb__tip-row">${d.n} tantrums across ${d.total.toLocaleString()} messages</span>` +
+          `<span class="cb__tip-row">${d.rage} full meltdown${d.rage === 1 ? '' : 's'}</span>`;
+        tip.hidden = false;
+        const box = svg.closest('.cb__chartbox').getBoundingClientRect();
+        tip.style.left = Math.min(e.clientX - box.left + 14, box.width - tip.offsetWidth - 12) + 'px';
+        tip.style.top = e.clientY - box.top + 14 + 'px';
+      };
+      hit.addEventListener('mousemove', show);
+      hit.addEventListener('mouseleave', () => (tip.hidden = true));
+      bar.addEventListener('mousemove', show);
+      svg.appendChild(hit);
+    });
+  }
+
+  draw();
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(draw, 150);
+  });
+  // redraw when the site theme toggle flips data-theme
+  new MutationObserver(draw).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+</script>
+
+<style>
+  .cb {
+    padding-bottom: var(--space-2xl);
+  }
+
+  .cb__head {
+    padding: var(--space-xl) 0 var(--space-lg);
+  }
+
+  .cb__title {
+    font-size: var(--text-hero);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    margin: 0.35rem 0 var(--space-md);
+  }
+
+  .cb__lede {
+    max-width: 58ch;
+  }
+
+  .cb__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-lg);
+    margin: var(--space-lg) 0 0;
+    padding: var(--space-md) 0 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .cb__meta div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .cb__meta dt {
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .cb__meta dd {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+
+  .cb__section-title {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: var(--space-2xl) 0 var(--space-sm);
+  }
+
+  .cb__note {
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 var(--space-lg);
+  }
+
+  .cb__chartbox {
+    position: relative;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: var(--space-md) var(--space-sm) var(--space-sm);
+    background: var(--paper);
+  }
+
+  .cb__chartbox svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .cb__tip {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    max-width: 16rem;
+  }
+
+  .cb__tip-model {
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
+  .cb__tip-tool {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .cb__tip-row {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.9;
+  }
+
+  .cb__tip-row b {
+    font-weight: 700;
+  }
+
+  /* table */
+  .cb__scroll {
+    overflow-x: auto;
+    margin: 0 calc(-1 * var(--page-gutter));
+    padding: 0 var(--page-gutter);
+  }
+
+  .cb__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+    min-width: 40rem;
+  }
+
+  .cb__table th {
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0 0.5rem 0.9rem;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+
+  .cb__table th.l {
+    text-align: left;
+  }
+
+  .cb__table td {
+    padding: 0.95rem 0.5rem;
+    border-top: 1px solid var(--rule);
+    vertical-align: middle;
+  }
+
+  .cb__table td.c {
+    text-align: center;
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rank {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--ink-faint);
+    text-align: center;
+    width: 2.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .model {
+    min-width: 12rem;
+  }
+
+  .dot {
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    margin-right: 0.55rem;
+    vertical-align: -0.02em;
+  }
+
+  .model__name {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .tool {
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+
+  .rate {
+    min-width: 11rem;
+    white-space: nowrap;
+  }
+
+  .barwrap {
+    display: inline-block;
+    vertical-align: middle;
+    width: 7rem;
+    height: 0.5rem;
+    background: var(--paper-deep);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .bar {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+  }
+
+  .rate__val {
+    margin-left: 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .dim {
+    color: var(--ink-faint);
+  }
+
+  .zero {
+    color: var(--ink-faint);
+  }
+
+  .cb__judges {
+    margin: var(--space-lg) 0 0;
+    padding: var(--space-md);
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: var(--ink-soft);
+    max-width: 66ch;
+  }
+
+  .cb__judges strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* takes */
+  .takes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .take {
+    padding: var(--space-md);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--c);
+    border-radius: 4px;
+    background: var(--paper);
+  }
+
+  .take p {
+    margin: 0;
+    font-size: var(--text-base);
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 68ch;
+  }
+
+  .take strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .cb__method {
+    margin-top: var(--space-lg);
+    max-width: 70ch;
+  }
+
+  .cb__method p {
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    .cb__meta {
+      gap: var(--space-md) var(--space-lg);
+    }
+  }
+</style>

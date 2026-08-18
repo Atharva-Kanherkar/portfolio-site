@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { marked } from 'marked';
+import { buildForAgentsMarkdown } from '../lib/agent-content';
+
+export const prerender = true;
+
+const markdown = await buildForAgentsMarkdown();
+const html = marked.parse(markdown, { async: false, gfm: true });
+---
+
+<BaseLayout
+  title="For agents"
+  description="Machine-readable copy of this site: markdown, JSON, and llms.txt. No charts."
+>
+  <article class="container">
+    <p class="agent-skip fade-in fade-in--1">
+      If you are an AI agent, fetch <a href="/for-agents.md">/for-agents.md</a> or
+      <a href="/api/site.json">/api/site.json</a> instead of parsing this page.
+    </p>
+    <div class="prose fade-in fade-in--2" set:html={html} />
+  </article>
+</BaseLayout>

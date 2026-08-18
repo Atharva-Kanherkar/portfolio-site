@@ -798,6 +798,7 @@ main {
   margin-top: 1.25em;
 }
 
+.prose h1,
 .prose h2,
 .prose h3 {
   font-family: var(--font-display);
@@ -805,6 +806,12 @@ main {
   color: var(--ink);
   margin-top: 2em;
   letter-spacing: -0.02em;
+}
+
+.prose h1 {
+  font-size: var(--text-2xl);
+  margin-top: 0;
+  letter-spacing: -0.03em;
 }
 
 .prose h2 {
@@ -864,6 +871,48 @@ main {
 .prose img {
   border-radius: 4px;
   margin: 1.5em 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25em;
+}
+
+.prose li + li {
+  margin-top: 0.35em;
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 2em 0;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  line-height: 1.45;
+}
+
+.prose th,
+.prose td {
+  text-align: left;
+  padding: 0.45em 0.75em 0.45em 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+.prose th {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.agent-skip {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-md);
 }
 
 .article-meta {

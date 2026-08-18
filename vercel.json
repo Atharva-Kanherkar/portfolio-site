@@ -1,0 +1,35 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "headers": [
+    {
+      "source": "/(llms.txt|llms-full.txt)",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, HEAD" },
+        { "key": "Cache-Control", "value": "public, max-age=300" },
+        { "key": "Link", "value": "</llms.txt>; rel=\"describedby\"" }
+      ]
+    },
+    {
+      "source": "/(.*).md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, HEAD" },
+        { "key": "Cache-Control", "value": "public, max-age=300" },
+        { "key": "Link", "value": "</llms.txt>; rel=\"describedby\"" }
+      ]
+    },
+    {
+      "source": "/api/site.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, HEAD" },
+        { "key": "Cache-Control", "value": "public, max-age=300" },
+        { "key": "Link", "value": "</llms.txt>; rel=\"describedby\"" }
+      ]
+    }
+  ]
+}

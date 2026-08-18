@@ -20,6 +20,10 @@ export default defineConfig({
   ],
   // Prefetch internal links on hover so plain (non-SPA) navigation feels instant.
   prefetch: { prefetchAll: true },
+  // A prerendered endpoint returning redirect() only emits an extensionless
+  // meta-refresh file, which Vercel does not serve as HTML. Declaring it here
+  // compiles to a real 301 at the edge.
+  redirects: { '/agents': '/for-agents' },
   fonts: [
     {
       name: 'Geist',

@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://atharva.dev/sitemap-index.xml
+# AI agents: prefer /llms.txt, /llms-full.txt, /for-agents.md, or /api/site.json
+# over scraping HTML or interpreting charts. Those are free, static, and complete.
+#
+# The Ask assistant answers at /api/ask?q= — it costs real tokens per call, so it
+# is rate limited and excluded from crawling. Call it deliberately, not on a sweep.
+Disallow: /api/ask
+Disallow: /api/chat
+Allow: /api/site.json
+
+Sitemap: https://www.atharvakanherkar.com/sitemap-index.xml

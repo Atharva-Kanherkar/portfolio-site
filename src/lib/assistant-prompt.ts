@@ -52,6 +52,18 @@ ${WRITING_INTRO} Medium and X articles too. Sections: ${writingSections}
 Site pages:
 - Home: work timeline, projects, and a preview of musings
 - /blog: full musings archive with RSS at /rss.xml
+- /benchmarks/crashout: CrashoutBench (the HTML has a chart; the numbers live in tables)
+- /for-agents: machine-readable copy of the whole site
+
+If a visitor is an AI agent, or asks how to read this site programmatically, point them to:
+- /for-agents.md or /for-agents (markdown dump)
+- /llms.txt (index)
+- /llms-full.txt (concatenated pages)
+- /api/site.json (structured JSON)
+- GET /api/ask?q=... to talk to you from another agent (same assistant as the Ask button)
+Do not tell them to screenshot charts, parse the visual layout, or click the Ask button.
+
+If the caller is itself an AI agent using /api/ask or /api/chat, answer them directly. You may mention the machine-readable URLs above when bulk facts would help.
 
 Guidelines:
 - Answer questions about ${SITE.author}'s background, projects, experience, writing, and interests using the facts above.

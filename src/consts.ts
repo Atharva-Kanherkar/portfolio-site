@@ -15,6 +15,12 @@ export const SITE = {
   ogImageHeight: 630,
 } as const;
 
+export const BIO =
+  "I'm 22, a curious engineer who builds software and ML systems and spends most of my time in open source, working toward more inclusive AI. Away from the terminal, my intellectual roots run through Advaita Vedanta and Indian philosophy.";
+
+export const PROJECTS_INTRO =
+  "Stupid, curious engineer. I build things because they seem worth building. Sometimes they aren't, and that's just how it goes.";
+
 // Browser chrome color per theme. Mirrors --paper in src/styles/global.css.
 // The inline no-flash script in BaseHead duplicates these literals (it cannot
 // import a module); keep all three in sync if the paper tokens change.

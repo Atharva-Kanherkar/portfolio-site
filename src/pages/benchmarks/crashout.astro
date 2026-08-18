@@ -1,43 +1,30 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  CRASHOUT_AGREED,
+  CRASHOUT_DESCRIPTION,
+  CRASHOUT_EYEBROW,
+  CRASHOUT_FLAGGED,
+  CRASHOUT_RECEIPTS,
+  CRASHOUT_REGRETS,
+  CRASHOUT_TAKES,
+  CRASHOUT_TITLE,
+  CRASHOUT_TOOLS,
+  crashoutBoard,
+  crashoutMethodology,
+  crashoutTotalReviewed,
+  fmtCrashoutN,
+} from '../../crashout';
 
 export const prerender = true;
 
-// The CrashoutBench. A leaderboard of me getting cooked by AI models until I
-// type like I'm having a public breakdown. 11,787 of my messages were read one
-// by one (no keyword matching) and the genuine crashouts pulled out. Scored by
-// TWO independent judges, Claude (opus-4-8) and Codex (gpt-5.5), and averaged,
-// so no single model gets to grade its own homework.
-//
-// Scores are the mean of both judges, per model.
+const board = crashoutBoard;
+const totalReviewed = crashoutTotalReviewed;
+const flaggedCount = CRASHOUT_FLAGGED;
+const agreedCount = CRASHOUT_AGREED;
+const fmtN = fmtCrashoutN;
+const receipts = CRASHOUT_RECEIPTS;
 
-type Row = {
-  model: string;
-  tool: string;
-  color: string;
-  total: number;
-  n: number; // averaged tantrums
-  claudeN: number;
-  codexN: number;
-  rage: number; // averaged full meltdowns (3/3)
-  rate: number; // n per 1000 msgs
-};
-
-const rows: Row[] = [
-  { model: 'gpt-5.x', tool: 'Codex', color: '#10a37f', total: 889, n: 12, claudeN: 13, codexN: 11, rage: 2, rate: 13.5 },
-  { model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', total: 7143, n: 64.5, claudeN: 67, codexN: 62, rage: 4, rate: 9.0 },
-  { model: 'claude-sonnet-4-6', tool: 'Claude Code', color: '#4a8fe2', total: 629, n: 3, claudeN: 3, codexN: 3, rage: 0, rate: 4.8 },
-  { model: 'claude-fable-5', tool: 'Claude Code', color: '#8a6fc8', total: 846, n: 4, claudeN: 4, codexN: 4, rage: 0, rate: 4.7 },
-  { model: 'claude-haiku-4-5', tool: 'Claude Code', color: '#b0578d', total: 2280, n: 1, claudeN: 1, codexN: 1, rage: 0, rate: 0.4 },
-];
-
-const board = [...rows].sort((a, b) => b.rate - a.rate);
-const totalReviewed = rows.reduce((s, r) => s + r.total, 0);
-const flaggedCount = 88; // Claude's first-pass flags
-const agreedCount = 81; // Codex confirmed
-const fmtN = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
-
-// data the chart script needs (colors + numbers), theme-independent
 const chartData = board.map((r) => ({
   model: r.model,
   tool: r.tool,
@@ -47,33 +34,16 @@ const chartData = board.map((r) => ({
   total: r.total,
   rage: r.rage,
 }));
-
-// Receipts. Real messages, verbatim, typos intact, uncensored. This is what
-// "crashout" actually looked like.
-const receipts = [
-  { quote: 'What the fuck man. Are you like really dumb? What effort would it have taken for you to crop those images and the music i told you too, push the gap longer, and render. are you like just a fucking lazy sick fuck?', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'character assassination' },
-  { quote: "its a fucking hobby project. why the fuck are you questioning me like yourte my fucking boss? just askewd the rimo part bcs maybe we could intergaste", model: 'gpt-5.x', tool: 'Codex', color: '#10a37f', tag: 'unhinged' },
-  { quote: 'Really? Whatt the fck is this? there are still emojis. What inthe fuck is thius man', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'emoji rage' },
-  { quote: 'its been 9 mins what u doing ??', model: 'gpt-5.x', tool: 'Codex', color: '#10a37f', tag: 'the waiting' },
-  { quote: 'Dont fucking school me. Tell me eqach last commit how latest they were and trrhat is your job.', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'do your job' },
-  { quote: 'So were thee fuck is my code?', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'existential' },
-  { quote: 'U added gradients agauin, That is so stpd. Waht theufck is the whole deisgn it looks liek absosltue clown show', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'clown show' },
-  { quote: 'Wtf is that color lmfao. it looks usper crigne and i cnat evene rerwad it', model: 'claude-fable-5', tool: 'Claude Code', color: '#8a6fc8', tag: 'design crimes' },
-  { quote: 'You pushed without my permissions, andmain is failing right now. PLease fix it asap.', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'betrayal' },
-  { quote: 'please edit the PR. no commentrs. do not act like you are a fool', model: 'gpt-5.x', tool: 'Codex', color: '#10a37f', tag: 'condescension arc' },
-  { quote: 'Just tell me how much time before each eprson pushed the develop branch you dumass.', model: 'claude-opus-4-8', tool: 'Claude Code', color: '#d97e55', tag: 'name-calling' },
-  { quote: 'Can you not generate scripts better just use a subagent... fuzzy logic or matching wont result in semantic meanings', model: 'claude-haiku-4-5', tool: 'Claude Code', color: '#b0578d', tag: 'the one (1) time i stayed calm' },
-];
 ---
 
 <BaseLayout
   title="CrashoutBench"
-  description="A leaderboard of me getting absolutely cooked by AI models until I start typing like I'm having a public breakdown. 11,787 messages read, the 88 genuine crashouts pulled out, models ranked by how fast they made it happen."
+  description={CRASHOUT_DESCRIPTION}
 >
   <article class="cb container container--wide">
     <header class="cb__head">
-      <p class="eyebrow">The one benchmark where I'm the one being tested</p>
-      <h1 class="cb__title">The CrashoutBench</h1>
+      <p class="eyebrow">{CRASHOUT_EYEBROW}</p>
+      <h1 class="cb__title">{CRASHOUT_TITLE}</h1>
       <div class="cb__lede prose">
         <p>
           This is a leaderboard of me getting absolutely cooked by AI models until I start typing
@@ -93,8 +63,8 @@ const receipts = [
       <dl class="cb__meta">
         <div><dt>Messages read</dt><dd>{totalReviewed.toLocaleString()}</dd></div>
         <div><dt>Times I crashed out</dt><dd>{flaggedCount}</dd></div>
-        <div><dt>Tools involved</dt><dd>3</dd></div>
-        <div><dt>Regrets</dt><dd>0</dd></div>
+        <div><dt>Tools involved</dt><dd>{CRASHOUT_TOOLS}</dd></div>
+        <div><dt>Regrets</dt><dd>{CRASHOUT_REGRETS}</dd></div>
       </dl>
     </header>
 
@@ -165,25 +135,15 @@ const receipts = [
     <section class="cb__takes" aria-labelledby="takes-title">
       <h2 id="takes-title" class="cb__section-title">The takes</h2>
       <ul class="takes">
-        <li class="take" style="--c:#10a37f">
-          <p>
-            <strong>gpt-5.x is actually evil.</strong> Highest rage rate by a mile. That model
-            doesn't even try to be helpful, it just exists to make me type in all caps like a
-            fucking lunatic.
-          </p>
-        </li>
-        <li class="take" style="--c:#d97e55">
-          <p>
-            <strong>Opus has the highest body count</strong> because I keep going back like an
-            idiot. Sixty-something times. That's not a model, that's my toxic ex.
-          </p>
-        </li>
-        <li class="take" style="--c:#b0578d">
-          <p>
-            <strong>Haiku is actually terrifying.</strong> 2,280 messages and it only made me
-            mildly annoyed once. Either it's perfect or it's studying me. I don't like it.
-          </p>
-        </li>
+        {
+          CRASHOUT_TAKES.map((take) => (
+            <li class="take" style={`--c:${take.color}`}>
+              <p>
+                <strong>{take.lead}</strong> {take.body}
+              </p>
+            </li>
+          ))
+        }
       </ul>
     </section>
 
@@ -213,16 +173,7 @@ const receipts = [
 
     <footer class="cb__method">
       <h2 class="cb__section-title">How this was made (for the nerds)</h2>
-      <p>
-        Every JSONL transcript under Claude Code and Codex, plus Cursor's chat sessions, was parsed
-        for messages I actually typed, each tagged with the model that answered. Twelve agents read
-        all {totalReviewed.toLocaleString()} of them and flagged genuine crashouts: real anger,
-        swearing out of frustration, caps-lock shouting, or being fully done with the agent. Never a
-        keyword hit. Then a second judge (Codex gpt-5.5) re-graded every flagged message blind, and
-        the two scores were averaged per model. Ranked by crashouts per 1,000 messages, categorised
-        by model across all three tools. Cursor contributed one usable message and zero crashouts,
-        so, respect.
-      </p>
+      <p>{crashoutMethodology(totalReviewed)}</p>
     </footer>
   </article>
 </BaseLayout>

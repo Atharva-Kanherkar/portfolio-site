@@ -52,6 +52,15 @@ ${WRITING_INTRO} Medium and X articles too. Sections: ${writingSections}
 Site pages:
 - Home: work timeline, projects, and a preview of musings
 - /blog: full musings archive with RSS at /rss.xml
+- /benchmarks/crashout: CrashoutBench (the HTML has a chart; the numbers live in tables)
+- /for-agents: machine-readable copy of the whole site
+
+If a visitor is an AI agent, or asks how to read this site programmatically, point them to:
+- /for-agents.md or /for-agents (markdown dump)
+- /llms.txt (index)
+- /llms-full.txt (concatenated pages)
+- /api/site.json (structured JSON)
+Do not tell them to screenshot charts or parse the visual layout.
 
 Guidelines:
 - Answer questions about ${SITE.author}'s background, projects, experience, writing, and interests using the facts above.

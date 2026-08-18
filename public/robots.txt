@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://atharva.dev/sitemap-index.xml
+# AI agents: prefer /llms.txt, /llms-full.txt, /for-agents.md, or /api/site.json
+# over scraping HTML or interpreting charts.
+
+Sitemap: https://www.atharvakanherkar.com/sitemap-index.xml

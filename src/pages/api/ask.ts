@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { AGENT_CORS, absoluteUrl, corsPreflight } from '../../lib/agent-http';
 import { completeAssistantJson, isValidQuestion } from '../../lib/assistant';
+import { rateLimitResponse } from '../../lib/rate-limit';
 
 export const prerender = false;
 
@@ -22,7 +23,8 @@ function wantsText(request: Request, format: string | null): boolean {
 
 export const OPTIONS: APIRoute = () => corsPreflight();
 
-export const GET: APIRoute = async ({ request, url }) => {
+export const GET: APIRoute = async (context) => {
+  const { request, url } = context;
   const question = url.searchParams.get('q') ?? url.searchParams.get('question') ?? '';
   const format = url.searchParams.get('format');
 
@@ -64,6 +66,9 @@ export const GET: APIRoute = async ({ request, url }) => {
     );
   }
 
+  const limited = rateLimitResponse(context);
+  if (limited) return limited;
+
   const result = await completeAssistantJson([{ role: 'user', content: question.trim() }]);
   if ('error' in result) {
     return errorResponse(result.error, result.status);
@@ -102,7 +107,11 @@ export const GET: APIRoute = async ({ request, url }) => {
   );
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
+  const { request } = context;
+  const limited = rateLimitResponse(context);
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await request.json();

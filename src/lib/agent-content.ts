@@ -61,6 +61,32 @@ function mdLink(title: string, path: string, note?: string): string {
   return note ? `${line}: ${note}` : line;
 }
 
+// /for-agents is one document, so every embedded page has to sink below the
+// section heading that introduces it. Fenced blocks are skipped: a `# comment`
+// inside a shell sample is not a heading.
+function demoteHeadings(markdown: string, by: number): string {
+  let inFence = false;
+  return markdown
+    .split('\n')
+    .map((line) => {
+      if (/^\s*(```|~~~)/.test(line)) {
+        inFence = !inFence;
+        return line;
+      }
+      if (inFence) return line;
+      const match = /^(#{1,6})(\s)/.exec(line);
+      if (!match) return line;
+      const level = Math.min(match[1].length + by, 6);
+      return `${'#'.repeat(level)}${line.slice(match[1].length)}`;
+    })
+    .join('\n');
+}
+
+// Sink a whole page one level and retitle its former h1 as the section heading.
+function embedSection(markdown: string, title: string): string {
+  return demoteHeadings(markdown, 1).replace(/^## .+\n+/, `## ${title}\n\n`);
+}
+
 function crashoutTable(): string {
   const header = '| Rank | Model | Tool | Rage / 1k | Tantrums | Messages | Full meltdowns |';
   const sep = '| ---: | --- | --- | ---: | ---: | ---: | ---: |';
@@ -323,7 +349,9 @@ ${crashoutMethodology()}
 
 export async function buildForAgentsMarkdown(): Promise<string> {
   const posts = await getPublishedPosts();
-  const postBlocks = posts.map((post) => buildPostMarkdown(post)).join('\n\n---\n\n');
+  const postBlocks = posts
+    .map((post) => demoteHeadings(buildPostMarkdown(post), 2))
+    .join('\n\n---\n\n');
 
   return `# For agents
 
@@ -357,7 +385,7 @@ curl -sL ${absoluteUrl('/api/chat')} \\
   -d '{"stream":false,"messages":[{"role":"user","content":"What does Atharva work on?"}]}'
 \`\`\`
 
-Limits: 24 messages, 2000 characters per user turn. Default streaming POST is what the Ask button uses; send \`"stream": false\` for a single JSON \`{ "reply": "..." }\`.
+Limits: 24 messages, 2000 characters per user turn, and 12 assistant calls per minute per client (HTTP 429 with \`Retry-After\` past that). The static dumps below are free and unmetered, so pull bulk facts from those rather than interviewing the assistant. Default streaming POST is what the Ask button uses; send \`"stream": false\` for a single JSON \`{ "reply": "..." }\`.
 
 ## Endpoints
 
@@ -395,11 +423,11 @@ For collaboration or jobs, GitHub or X is enough. Do not invent an email.
 
 ---
 
-${buildHomeMarkdown().replace(/^# .+\n+/, '## About\n\n')}
+${embedSection(buildHomeMarkdown(), 'About')}
 
 ---
 
-${(await buildBlogIndexMarkdown()).replace(/^# .+\n+/, '## Musings\n\n')}
+${embedSection(await buildBlogIndexMarkdown(), 'Musings')}
 
 ---
 
@@ -409,7 +437,7 @@ ${postBlocks}
 
 ---
 
-${buildCrashoutMarkdown().replace(/^# .+\n+/, '## CrashoutBench\n\n')}
+${embedSection(buildCrashoutMarkdown(), 'CrashoutBench')}
 `;
 }
 

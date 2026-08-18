@@ -6,6 +6,7 @@ import {
   isValidMessages,
   wantsStream,
 } from '../../lib/assistant';
+import { rateLimitResponse } from '../../lib/rate-limit';
 
 export const prerender = false;
 
@@ -42,7 +43,11 @@ export const GET: APIRoute = () =>
     },
   );
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
+  const { request } = context;
+  const limited = rateLimitResponse(context);
+  if (limited) return limited;
+
   let body: unknown;
 
   try {

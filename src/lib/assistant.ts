@@ -51,6 +51,7 @@ export function assistantApiDocs() {
     name: `${SITE.author}'s portfolio assistant`,
     same_as: 'The Ask button on the HTML site',
     note: 'Same assistant humans get from Ask. No auth. CORS is open. Do not try to click the button.',
+    rate_limit: '12 requests per minute per client; HTTP 429 with Retry-After past that. Static dumps (/for-agents.md, /llms-full.txt, /api/site.json) are unmetered — prefer them for bulk facts.',
     one_shot: {
       method: 'GET',
       url: absoluteUrl('/api/ask'),

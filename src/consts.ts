@@ -10,7 +10,7 @@ export const SITE = {
   xArticles: 'https://x.com/attharrva15/articles',
   ogImage: '/og.jpg',
   ogImageAlt:
-    'Atharva — profile photo. Software in the open. Philosophy in the long run.',
+    'Atharva. Software in the open. Philosophy in the long run.',
   ogImageWidth: 1200,
   ogImageHeight: 630,
 } as const;

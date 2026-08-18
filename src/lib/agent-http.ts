@@ -1,6 +1,12 @@
 import { SITE } from '../consts';
 
-const CORS = {
+export const AGENT_CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Accept',
+} as const;
+
+const FILE_CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, HEAD',
   'Cache-Control': 'public, max-age=300',
@@ -41,7 +47,7 @@ export function markdownPathFor(pathname: string): string | null {
 export function markdownResponse(body: string): Response {
   return new Response(body, {
     headers: {
-      ...CORS,
+      ...FILE_CORS,
       'Content-Type': 'text/markdown; charset=utf-8',
       Link: '</llms.txt>; rel="describedby"',
     },
@@ -51,7 +57,7 @@ export function markdownResponse(body: string): Response {
 export function plainTextResponse(body: string): Response {
   return new Response(body, {
     headers: {
-      ...CORS,
+      ...FILE_CORS,
       'Content-Type': 'text/plain; charset=utf-8',
       Link: '</llms.txt>; rel="describedby"',
     },
@@ -61,9 +67,13 @@ export function plainTextResponse(body: string): Response {
 export function jsonResponse(data: unknown): Response {
   return new Response(`${JSON.stringify(data, null, 2)}\n`, {
     headers: {
-      ...CORS,
+      ...FILE_CORS,
       'Content-Type': 'application/json; charset=utf-8',
       Link: '</llms.txt>; rel="describedby"',
     },
   });
+}
+
+export function corsPreflight(): Response {
+  return new Response(null, { status: 204, headers: AGENT_CORS });
 }

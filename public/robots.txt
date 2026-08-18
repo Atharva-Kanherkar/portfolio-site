@@ -2,6 +2,6 @@ User-agent: *
 Allow: /
 
 # AI agents: prefer /llms.txt, /llms-full.txt, /for-agents.md, or /api/site.json
-# over scraping HTML or interpreting charts.
+# over scraping HTML or interpreting charts. Talk to the Ask assistant at /api/ask?q=
 
 Sitemap: https://www.atharvakanherkar.com/sitemap-index.xml

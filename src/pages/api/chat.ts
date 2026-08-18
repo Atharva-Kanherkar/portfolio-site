@@ -1,60 +1,48 @@
 import type { APIRoute } from 'astro';
-import { buildAssistantSystemPrompt } from '../../lib/assistant-prompt';
+import { AGENT_CORS, corsPreflight } from '../../lib/agent-http';
+import {
+  completeAssistantJson,
+  completeAssistantStream,
+  isValidMessages,
+  wantsStream,
+} from '../../lib/assistant';
 
 export const prerender = false;
-
-type ChatRole = 'user' | 'assistant';
-
-type ChatMessage = {
-  role: ChatRole;
-  content: string;
-};
-
-const MAX_MESSAGES = 24;
-const MAX_USER_CONTENT_LENGTH = 2000;
-const MAX_ASSISTANT_CONTENT_LENGTH = 12000;
-
-function isValidMessages(value: unknown): value is ChatMessage[] {
-  if (!Array.isArray(value) || value.length === 0 || value.length > MAX_MESSAGES) {
-    return false;
-  }
-
-  return value.every((message) => {
-    if (
-      !message ||
-      typeof message !== 'object' ||
-      typeof message.content !== 'string' ||
-      message.content.trim().length === 0
-    ) {
-      return false;
-    }
-
-    if (message.role === 'user') {
-      return message.content.length <= MAX_USER_CONTENT_LENGTH;
-    }
-
-    if (message.role === 'assistant') {
-      return message.content.length <= MAX_ASSISTANT_CONTENT_LENGTH;
-    }
-
-    return false;
-  });
-}
 
 function errorResponse(message: string, status: number) {
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      ...AGENT_CORS,
+      'Content-Type': 'application/json; charset=utf-8',
+    },
   });
 }
 
+export const OPTIONS: APIRoute = () => corsPreflight();
+
+export const GET: APIRoute = () =>
+  new Response(
+    JSON.stringify(
+      {
+        error: 'POST a messages array, or GET /api/ask?q=... for a one-shot question.',
+        docs: '/for-agents.md',
+        ask: '/api/ask?q=',
+      },
+      null,
+      2,
+    ) + '\n',
+    {
+      status: 405,
+      headers: {
+        ...AGENT_CORS,
+        Allow: 'POST, OPTIONS',
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+    },
+  );
+
 export const POST: APIRoute = async ({ request }) => {
-  const apiKey = import.meta.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    return errorResponse('Chat is not configured yet.', 503);
-  }
-
   let body: unknown;
 
   try {
@@ -67,99 +55,35 @@ export const POST: APIRoute = async ({ request }) => {
     return errorResponse('Invalid messages.', 400);
   }
 
-  const model = import.meta.env.OPENAI_MODEL ?? 'gpt-5-mini';
+  const stream = wantsStream(body);
 
-  const payload: Record<string, unknown> = {
-    model,
-    stream: true,
-    messages: [{ role: 'system', content: buildAssistantSystemPrompt() }, ...body.messages],
-  };
-
-  if (!model.startsWith('gpt-5')) {
-    payload.temperature = 0.4;
-  }
-
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok || !response.body) {
-      const errorText = await response.text();
-      console.error('OpenAI error:', errorText);
-      return errorResponse('The assistant is unavailable right now.', 502);
+  if (!stream) {
+    const result = await completeAssistantJson(body.messages);
+    if ('error' in result) {
+      return errorResponse(result.error, result.status);
     }
-
-    const upstream = response.body;
-    const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
-
-    const stream = new ReadableStream<Uint8Array>({
-      async start(controller) {
-        const reader = upstream.getReader();
-        let buffer = '';
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              break;
-            }
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() ?? '';
-
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed.startsWith('data:')) {
-                continue;
-              }
-
-              const data = trimmed.slice(5).trim();
-              if (!data || data === '[DONE]') {
-                continue;
-              }
-
-              try {
-                const parsed = JSON.parse(data) as {
-                  choices?: Array<{ delta?: { content?: string } }>;
-                };
-                const content = parsed.choices?.[0]?.delta?.content;
-
-                if (content) {
-                  controller.enqueue(encoder.encode(content));
-                }
-              } catch {
-                // Ignore malformed chunks from upstream.
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Chat stream failed:', error);
-          controller.error(error);
-          return;
-        }
-
-        controller.close();
-      },
-    });
-
-    return new Response(stream, {
+    return new Response(JSON.stringify({ reply: result.reply }) + '\n', {
       status: 200,
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        Connection: 'keep-alive',
+        ...AGENT_CORS,
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
       },
     });
-  } catch (error) {
-    console.error('Chat route failed:', error);
-    return errorResponse('The assistant is unavailable right now.', 500);
   }
+
+  const result = await completeAssistantStream(body.messages);
+  if ('error' in result) {
+    return errorResponse(result.error, result.status);
+  }
+
+  return new Response(result, {
+    status: 200,
+    headers: {
+      ...AGENT_CORS,
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+    },
+  });
 };

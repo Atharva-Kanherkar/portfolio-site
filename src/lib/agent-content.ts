@@ -22,6 +22,7 @@ import {
 } from '../crashout';
 import { PROJECTS } from '../projects';
 import { TIMELINE } from '../timeline';
+import { assistantApiDocs } from './assistant';
 import { absoluteUrl } from './agent-http';
 
 const ABOUT = {
@@ -84,18 +85,21 @@ export async function buildSiteJson() {
     description: SITE.description,
     bio: BIO,
     how_to_read: {
-      note: 'Prefer these machine-readable URLs over HTML, photos, or charts.',
+      note: 'Prefer these machine-readable URLs over HTML, photos, or charts. To talk to the on-site Ask assistant, GET /api/ask?q=...',
       endpoints: {
         for_agents: absoluteUrl('/for-agents.md'),
         llms_txt: absoluteUrl('/llms.txt'),
         llms_full: absoluteUrl('/llms-full.txt'),
         site_json: absoluteUrl('/api/site.json'),
+        ask: absoluteUrl('/api/ask'),
+        chat: absoluteUrl('/api/chat'),
         home_md: absoluteUrl('/index.md'),
         musings_md: absoluteUrl('/blog.md'),
         crashout_md: absoluteUrl('/benchmarks/crashout.md'),
         rss: absoluteUrl('/rss.xml'),
       },
     },
+    assistant: assistantApiDocs(),
     about: ABOUT,
     timeline: TIMELINE,
     projects: {
@@ -181,10 +185,16 @@ ${BIO}
 
 This site publishes a machine-readable copy for AI agents. Fetch those files instead of scraping HTML, interpreting CSS, or reading SVG charts.
 
+There is also an on-site assistant (the Ask button). Do not try to click it. Call it:
+
+- GET ${absoluteUrl('/api/ask')}?q=your+question
+- POST ${absoluteUrl('/api/chat')} with \`{ "messages": [...], "stream": false }\`
+
 ## Start here
 
 ${mdLink('For agents', '/for-agents.md', 'Full site as markdown — bio, work, projects, musings, and CrashoutBench tables.')}
-${mdLink('Site JSON', '/api/site.json', 'Same facts as structured JSON.')}
+${mdLink('Site JSON', '/api/site.json', 'Same facts as structured JSON, plus assistant API docs.')}
+${mdLink('Ask the assistant', '/api/ask', 'One-shot Q&A. Pass ?q=... Same model as the Ask button.')}
 ${mdLink('llms-full.txt', '/llms-full.txt', 'Concatenated markdown of every public page.')}
 
 ## Pages
@@ -321,6 +331,34 @@ You are reading Atharva Kanherkar's personal site in a form meant for tools. Ski
 
 No authentication. CORS is open. \`text/markdown\`, \`text/plain\`, and \`application/json\`.
 
+## Talk to the assistant
+
+The HTML site has an Ask button. That UI is for humans. You are talking to the same assistant if you call these endpoints. No auth.
+
+One-shot (works with WebFetch, curl, or any GET):
+
+\`\`\`
+GET ${absoluteUrl('/api/ask')}?q=What+does+Atharva+work+on%3F
+\`\`\`
+
+JSON in, JSON out:
+
+\`\`\`sh
+curl -sL "${absoluteUrl('/api/ask')}?q=What%20does%20Atharva%20work%20on%3F"
+curl -sL "${absoluteUrl('/api/ask')}?q=What%20does%20Atharva%20work%20on%3F&format=text"
+\`\`\`
+
+Multi-turn (same conversation the Ask sidebar uses):
+
+\`\`\`sh
+curl -sL ${absoluteUrl('/api/chat')} \\
+  -H 'Content-Type: application/json' \\
+  -H 'Accept: application/json' \\
+  -d '{"stream":false,"messages":[{"role":"user","content":"What does Atharva work on?"}]}'
+\`\`\`
+
+Limits: 24 messages, 2000 characters per user turn. Default streaming POST is what the Ask button uses; send \`"stream": false\` for a single JSON \`{ "reply": "..." }\`.
+
 ## Endpoints
 
 | URL | Format | What you get |
@@ -328,7 +366,9 @@ No authentication. CORS is open. \`text/markdown\`, \`text/plain\`, and \`applic
 | ${absoluteUrl('/for-agents.md')} | markdown | This document (full dump) |
 | ${absoluteUrl('/llms.txt')} | markdown | Curated index ([llms.txt](https://llmstxt.org/) spec) |
 | ${absoluteUrl('/llms-full.txt')} | markdown | Every public page concatenated |
-| ${absoluteUrl('/api/site.json')} | JSON | Structured profile, work, projects, posts, CrashoutBench |
+| ${absoluteUrl('/api/site.json')} | JSON | Structured profile, work, projects, posts, CrashoutBench, assistant API |
+| ${absoluteUrl('/api/ask')} | JSON or text | On-site assistant. GET \`?q=\` or POST \`{"q":"..."}\` |
+| ${absoluteUrl('/api/chat')} | JSON or text stream | Multi-turn assistant. POST messages. |
 | ${absoluteUrl('/index.md')} | markdown | Home |
 | ${absoluteUrl('/blog.md')} | markdown | Musings index |
 | ${SITE.url}/blog/{slug}.md | markdown | One musing |
@@ -340,6 +380,7 @@ Example:
 curl -sL ${absoluteUrl('/api/site.json')}
 curl -sL ${absoluteUrl('/llms.txt')}
 curl -sL ${absoluteUrl('/for-agents.md')}
+curl -sL "${absoluteUrl('/api/ask')}?q=Who%20is%20Atharva%3F"
 \`\`\`
 
 HTML pages also advertise these via \`rel="describedby"\` → \`/llms.txt\` and \`rel="alternate" type="text/markdown"\`.

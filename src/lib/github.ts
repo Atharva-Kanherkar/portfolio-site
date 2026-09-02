@@ -54,6 +54,9 @@ const prsCache = new Map<string, { data: PrsData; expiresAt: number }>();
 
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
+// Accounts/orgs owned by the site author — PRs to these repos are not community contributions
+const OWN_ACCOUNTS = ['Atharva-Kanherkar', 'agentclash'];
+
 export async function fetchContributions(
   username = 'Atharva-Kanherkar',
   forceRefresh = false,
@@ -157,7 +160,7 @@ export async function fetchMergedPrs(options?: {
 
   const query =
     type === 'community'
-      ? 'author:Atharva-Kanherkar type:pr is:merged -user:Atharva-Kanherkar'
+      ? `author:Atharva-Kanherkar type:pr is:merged ${OWN_ACCOUNTS.map((a) => `-user:${a}`).join(' ')}`
       : 'author:Atharva-Kanherkar type:pr is:merged';
 
   const headers: Record<string, string> = {
@@ -229,10 +232,15 @@ export async function fetchMergedPrs(options?: {
 
     // Use bundled snapshot data
     const snapshotGroup = type === 'community' ? GITHUB_SNAPSHOT.prs.community : GITHUB_SNAPSHOT.prs.all;
-    const total_count = snapshotGroup.total_count;
+    const snapshotPrs =
+      type === 'community'
+        ? (snapshotGroup.prs as MergedPr[]).filter((pr) => !OWN_ACCOUNTS.includes(pr.repo_owner))
+        : (snapshotGroup.prs as MergedPr[]);
+    const removedCount = (snapshotGroup.prs as MergedPr[]).length - snapshotPrs.length;
+    const total_count = Math.max(0, snapshotGroup.total_count - removedCount);
     const total_pages = Math.max(1, Math.ceil(total_count / per_page));
     const startIndex = (page - 1) * per_page;
-    const pagedPrs = (snapshotGroup.prs as MergedPr[]).slice(startIndex, startIndex + per_page);
+    const pagedPrs = snapshotPrs.slice(startIndex, startIndex + per_page);
 
     return {
       total_count,

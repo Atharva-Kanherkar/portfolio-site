@@ -1,0 +1,1116 @@
+---
+import { fetchContributions, fetchMergedPrs } from '../lib/github';
+
+// Fetch initial data at build/render time (uses live fetch with snapshot fallback)
+const contributionsData = await fetchContributions('Atharva-Kanherkar');
+const prsData = await fetchMergedPrs({ type: 'community', page: 1, per_page: 10 });
+
+function formatDate(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch {
+    return isoString;
+  }
+}
+---
+
+<div class="gh-contributions" data-gh-root>
+  <!-- 1. The GitHub Contribution Calendar Box -->
+  <div class="gh-calendar-card">
+    <div class="gh-calendar-card__header">
+      <div class="gh-calendar-card__title-group">
+        <span class="gh-calendar-card__total" data-total-contributions>
+          <strong>{contributionsData.totalContributions}</strong> contributions in the last year
+        </span>
+      </div>
+
+      <div class="gh-calendar-card__actions">
+        <button
+          type="button"
+          class="gh-refresh-btn"
+          data-refresh-btn
+          aria-label="Refresh GitHub data"
+          title="Refresh GitHub activity"
+        >
+          <svg
+            class="gh-refresh-icon"
+            viewBox="0 0 16 16"
+            width="13"
+            height="13"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M1.75 8a6.25 6.25 0 0 1 10.67-4.42l1.83 1.84M14.25 1.75v3.67h-3.67M14.25 8a6.25 6.25 0 0 1-10.67 4.42l-1.83-1.84M1.75 14.25v-3.67h3.67"></path>
+          </svg>
+          <span class="gh-refresh-text" data-refresh-text>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bordered graph box, like the actual GitHub profile calendar -->
+    <div class="gh-graph-box">
+    <!-- Calendar Graph Table (Horizontally Scrollable on Mobile) -->
+    <div class="gh-graph-wrapper" data-graph-wrapper>
+      <table class="gh-graph-table" role="grid" aria-label="GitHub Contribution Graph" data-graph-table>
+        <caption class="sr-only">GitHub Contribution Graph for Atharva-Kanherkar</caption>
+        <thead>
+          <tr class="gh-graph-months-row">
+            <td class="gh-graph-weekday-cell" aria-hidden="true"></td>
+            {
+              contributionsData.months.map((m) => (
+                <td class="gh-graph-month-label" colspan={m.colSpan}>
+                  <span>{m.label}</span>
+                </td>
+              ))
+            }
+          </tr>
+        </thead>
+        <tbody>
+          {
+            contributionsData.rows.map((row) => (
+              <tr class="gh-graph-row">
+                <td class="gh-graph-weekday-cell">
+                  <span class={`gh-weekday-label ${row.isVisibleLabel ? 'gh-weekday-label--visible' : 'sr-only'}`}>
+                    {row.label}
+                  </span>
+                </td>
+                {row.days.map((day) => (
+                  <td
+                    class="gh-day-cell"
+                    data-date={day.date}
+                    data-level={day.level}
+                    data-tooltip={day.text}
+                    tabindex="0"
+                    role="gridcell"
+                    aria-label={day.text}
+                  />
+                ))}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+
+      <!-- Floating Tooltip -->
+      <div class="gh-tooltip" data-gh-tooltip role="tooltip" aria-hidden="true">
+        <span class="gh-tooltip__text" data-tooltip-text></span>
+        <span class="gh-tooltip__arrow"></span>
+      </div>
+    </div>
+
+    <!-- Calendar Footer: Profile Link & Legend -->
+    <div class="gh-calendar-card__footer">
+      <a
+        href="https://github.com/Atharva-Kanherkar"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="gh-meta-link"
+      >
+        <span>@Atharva-Kanherkar on GitHub</span>
+        <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M2.5 9.5L9.5 2.5M9.5 2.5H4.5M9.5 2.5V7.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </a>
+
+      <div class="gh-legend" aria-hidden="true">
+        <span class="gh-legend__label">Less</span>
+        <span class="gh-legend__cell" data-level="0"></span>
+        <span class="gh-legend__cell" data-level="1"></span>
+        <span class="gh-legend__cell" data-level="2"></span>
+        <span class="gh-legend__cell" data-level="3"></span>
+        <span class="gh-legend__cell" data-level="4"></span>
+        <span class="gh-legend__label">More</span>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 2. Merged Pull Requests Section -->
+  <div class="gh-prs-container">
+    <div class="gh-prs-header">
+      <div class="gh-prs-title-wrap">
+        <h3 class="gh-prs-title">Pull Requests</h3>
+        <span class="gh-count-badge" data-pr-total-badge>{prsData.total_count} merged</span>
+      </div>
+    </div>
+
+    <!-- Active PR List -->
+    <div class="gh-prs-list-wrapper">
+      <div class="gh-prs-loading-bar" data-prs-loading aria-hidden="true"></div>
+
+      <ul class="gh-prs-list" data-prs-list aria-label="Merged pull requests">
+        {
+          prsData.prs.map((pr) => (
+            <li class="gh-pr-card">
+              <div class="gh-pr-icon-wrap" aria-hidden="true" title="Merged Pull Request">
+                <svg
+                  class="gh-pr-icon"
+                  viewBox="0 0 16 16"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M5.45 5.154A4.25 4.25 0 0 0 9.25 7.5h1.378a2.251 2.251 0 1 1 0 1.5H9.25A5.734 5.734 0 0 1 5 7.123v5.127a2.25 2.25 0 1 1-1.5 0V3.75a2.25 2.25 0 1 1 1.95 1.404ZM4.25 3a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 10.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm8.5-4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+                </svg>
+              </div>
+
+              <div class="gh-pr-content">
+                <div class="gh-pr-main-row">
+                  <a
+                    href={pr.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="gh-pr-title-link"
+                  >
+                    {pr.title}
+                  </a>
+                </div>
+
+                <div class="gh-pr-meta">
+                  <a
+                    href={`https://github.com/${pr.repo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="gh-repo-tag"
+                  >
+                    {pr.repo}
+                  </a>
+                  <span class="gh-pr-number">#{pr.number}</span>
+                  <span class="gh-meta-sep" aria-hidden="true">·</span>
+                  <time class="gh-pr-time" datetime={pr.merged_at}>
+                    Merged {formatDate(pr.merged_at)}
+                  </time>
+                </div>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <!-- Pagination Navigation -->
+    <nav class="gh-pagination" data-gh-pagination aria-label="PRs Pagination">
+      <div class="gh-pagination__info">
+        <span data-page-summary>Page {prsData.page} of {prsData.total_pages}</span>
+      </div>
+
+      <div class="gh-pagination__controls">
+        <button
+          type="button"
+          class="gh-page-btn gh-page-btn--prev"
+          data-page-prev
+          disabled={prsData.page <= 1}
+          aria-label="Previous page"
+        >
+          ← Prev
+        </button>
+
+        <div class="gh-page-numbers" data-page-numbers>
+          <!-- Page numbers rendered dynamically -->
+        </div>
+
+        <button
+          type="button"
+          class="gh-page-btn gh-page-btn--next"
+          data-page-next
+          disabled={prsData.page >= prsData.total_pages}
+          aria-label="Next page"
+        >
+          Next →
+        </button>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<style>
+  /* --- GitHub Contributions & Calendar Tokens --- */
+  .gh-contributions {
+    --gh-border: var(--rule);
+    --gh-card-bg: var(--paper-deep);
+    --gh-text: var(--ink);
+    --gh-text-soft: var(--ink-soft);
+    --gh-text-muted: var(--ink-muted);
+    --gh-text-faint: var(--ink-faint);
+
+    /* GitHub Calendar exact green scale (light mode) */
+    --gh-l0: #ebedf0;
+    --gh-l1: #9be9a8;
+    --gh-l2: #40c463;
+    --gh-l3: #30a14e;
+    --gh-l4: #216e39;
+
+    /* GitHub Merged purple */
+    --gh-merged: #8250df;
+    --gh-merged-bg: rgba(130, 80, 223, 0.1);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    width: 100%;
+    margin-top: var(--space-sm);
+  }
+
+  /* Dark mode overrides (respecting system and data-theme="dark") */
+  :global(:root[data-theme='dark']) .gh-contributions,
+  :global(:root:not([data-theme='light'])) .gh-contributions {
+    @media (prefers-color-scheme: dark) {
+      --gh-l0: #161b22;
+      --gh-l1: #0e4429;
+      --gh-l2: #006d32;
+      --gh-l3: #26a641;
+      --gh-l4: #39d353;
+      --gh-merged: #a371f7;
+      --gh-merged-bg: rgba(163, 113, 247, 0.15);
+    }
+  }
+
+  :global(:root[data-theme='dark']) .gh-contributions {
+    --gh-l0: #161b22;
+    --gh-l1: #0e4429;
+    --gh-l2: #006d32;
+    --gh-l3: #26a641;
+    --gh-l4: #39d353;
+    --gh-merged: #a371f7;
+    --gh-merged-bg: rgba(163, 113, 247, 0.15);
+  }
+
+  /* Calendar — flat, no card chrome, like the actual GitHub profile graph */
+  .gh-calendar-card {
+    position: relative;
+  }
+
+  .gh-calendar-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.875rem;
+    flex-wrap: wrap;
+  }
+
+  .gh-calendar-card__total {
+    font-size: 1rem;
+    color: var(--gh-text);
+  }
+
+  .gh-calendar-card__total strong {
+    font-weight: 600;
+    color: var(--gh-text);
+  }
+
+  /* Thin bordered box around the graph + footer, like GitHub's profile calendar */
+  .gh-graph-box {
+    border: 1px solid var(--gh-border);
+    border-radius: 6px;
+    padding: 0.625rem 1rem 0.75rem;
+  }
+
+  .gh-calendar-card__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .gh-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gh-text-soft);
+    background: var(--paper);
+    border: 1px solid var(--gh-border);
+    border-radius: 4px;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .gh-refresh-btn:hover {
+    color: var(--gh-text);
+    border-color: var(--rule-strong);
+    background: var(--paper-deep);
+  }
+
+  .gh-refresh-btn--spinning .gh-refresh-icon {
+    animation: gh-spin 0.75s linear infinite;
+  }
+
+  @keyframes gh-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Table & Calendar Grid */
+  .gh-graph-wrapper {
+    position: relative;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.25rem 0 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule-strong) transparent;
+  }
+
+  .gh-graph-wrapper::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .gh-graph-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--rule-strong);
+    border-radius: 2px;
+  }
+
+  .gh-graph-table {
+    border-collapse: separate;
+    border-spacing: 3px;
+    margin: 0;
+    font-size: 0.75rem;
+    user-select: none;
+    width: max-content;
+  }
+
+  .gh-graph-months-row {
+    height: 15px;
+  }
+
+  .gh-graph-weekday-cell {
+    width: 28px;
+    min-width: 28px;
+    padding: 0 4px 0 0;
+    text-align: right;
+  }
+
+  .gh-graph-month-label {
+    text-align: left;
+    font-size: 0.6875rem;
+    font-family: var(--font-body);
+    color: var(--gh-text-muted);
+    font-weight: 400;
+    padding-bottom: 2px;
+  }
+
+  .gh-weekday-label {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-family: var(--font-body);
+    color: var(--gh-text-muted);
+    line-height: 10px;
+    height: 10px;
+    transform: translateY(-1px);
+  }
+
+  .gh-weekday-label--visible {
+    visibility: visible;
+  }
+
+  .gh-day-cell {
+    width: 11px;
+    height: 11px;
+    min-width: 11px;
+    min-height: 11px;
+    max-width: 11px;
+    border-radius: 2px;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: transform 0.08s ease, outline 0.08s ease;
+    outline: 1px solid rgba(0, 0, 0, 0.06);
+    outline-offset: -1px;
+  }
+
+  :global(:root[data-theme='dark']) .gh-day-cell,
+  :global(:root:not([data-theme='light'])) .gh-day-cell {
+    @media (prefers-color-scheme: dark) {
+      outline: 1px solid rgba(255, 255, 255, 0.04);
+    }
+  }
+
+  :global(:root[data-theme='dark']) .gh-day-cell {
+    outline: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .gh-day-cell[data-level='0'] { background-color: var(--gh-l0); }
+  .gh-day-cell[data-level='1'] { background-color: var(--gh-l1); }
+  .gh-day-cell[data-level='2'] { background-color: var(--gh-l2); }
+  .gh-day-cell[data-level='3'] { background-color: var(--gh-l3); }
+  .gh-day-cell[data-level='4'] { background-color: var(--gh-l4); }
+
+  .gh-day-cell:hover,
+  .gh-day-cell:focus-visible {
+    transform: scale(1.25);
+    outline: 1px solid var(--gh-text);
+    z-index: 5;
+    position: relative;
+  }
+
+  /* Tooltip */
+  .gh-tooltip {
+    position: absolute;
+    display: none;
+    pointer-events: none;
+    z-index: 50;
+    background: #24292f;
+    color: #ffffff;
+    font-size: 0.6875rem;
+    font-family: var(--font-body);
+    font-weight: 400;
+    line-height: 1.4;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    transform: translate(-50%, -100%);
+    margin-top: -6px;
+    transition: opacity 0.1s ease;
+  }
+
+  :global(:root[data-theme='dark']) .gh-tooltip,
+  :global(:root:not([data-theme='light'])) .gh-tooltip {
+    @media (prefers-color-scheme: dark) {
+      background: #2d333b;
+      color: #f0f6fc;
+      border: 1px solid #444c56;
+    }
+  }
+
+  :global(:root[data-theme='dark']) .gh-tooltip {
+    background: #2d333b;
+    color: #f0f6fc;
+    border: 1px solid #444c56;
+  }
+
+  .gh-tooltip__arrow {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #24292f;
+  }
+
+  :global(:root[data-theme='dark']) .gh-tooltip__arrow,
+  :global(:root:not([data-theme='light'])) .gh-tooltip__arrow {
+    @media (prefers-color-scheme: dark) {
+      border-top-color: #2d333b;
+    }
+  }
+
+  :global(:root[data-theme='dark']) .gh-tooltip__arrow {
+    border-top-color: #2d333b;
+  }
+
+  /* Calendar Footer */
+  .gh-calendar-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .gh-meta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--gh-text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .gh-meta-link:hover {
+    color: var(--gh-text);
+  }
+
+  .gh-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.6875rem;
+    color: var(--gh-text-muted);
+  }
+
+  .gh-legend__label {
+    padding: 0 2px;
+  }
+
+  .gh-legend__cell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    outline: 1px solid rgba(0, 0, 0, 0.06);
+    outline-offset: -1px;
+  }
+
+  .gh-legend__cell[data-level='0'] { background-color: var(--gh-l0); }
+  .gh-legend__cell[data-level='1'] { background-color: var(--gh-l1); }
+  .gh-legend__cell[data-level='2'] { background-color: var(--gh-l2); }
+  .gh-legend__cell[data-level='3'] { background-color: var(--gh-l3); }
+  .gh-legend__cell[data-level='4'] { background-color: var(--gh-l4); }
+
+  /* --- PRs Section --- */
+  .gh-prs-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+  }
+
+  .gh-prs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .gh-prs-title-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .gh-prs-title {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gh-text-muted);
+    margin: 0;
+  }
+
+  .gh-count-badge {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gh-text-soft);
+    background: var(--gh-card-bg);
+    border: 1px solid var(--gh-border);
+    padding: 0.1rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  /* PRs List */
+  .gh-prs-list-wrapper {
+    position: relative;
+    border: 1px solid var(--gh-border);
+    border-radius: 6px;
+    background: var(--paper);
+    overflow: hidden;
+  }
+
+  .gh-prs-loading-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--gh-merged);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
+    z-index: 10;
+  }
+
+  .gh-prs-loading-bar--active {
+    opacity: 1;
+    transform: scaleX(1);
+    animation: gh-bar-indet 1.2s infinite ease-in-out;
+  }
+
+  @keyframes gh-bar-indet {
+    0% { transform: translateX(-100%) scaleX(0.2); }
+    50% { transform: translateX(0) scaleX(0.7); }
+    100% { transform: translateX(100%) scaleX(0.2); }
+  }
+
+  .gh-prs-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+  }
+
+  :global(.gh-pr-card) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--gh-border);
+    transition: background-color 0.12s ease;
+  }
+
+  :global(.gh-pr-card:last-child) {
+    border-bottom: none;
+  }
+
+  :global(.gh-pr-card:hover) {
+    background-color: var(--gh-card-bg);
+  }
+
+  :global(.gh-pr-icon-wrap) {
+    color: var(--gh-merged);
+    display: flex;
+    align-items: flex-start;
+    padding-top: 2px;
+  }
+
+  :global(.gh-pr-content) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  :global(.gh-pr-main-row) {
+    line-height: 1.4;
+  }
+
+  :global(.gh-pr-title-link) {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--gh-text);
+    text-decoration: none;
+    word-break: break-word;
+    transition: color 0.12s ease;
+  }
+
+  :global(.gh-pr-title-link:hover) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  :global(.gh-pr-meta) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--gh-text-muted);
+  }
+
+  :global(.gh-repo-tag) {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--gh-text-soft);
+    background: var(--gh-card-bg);
+    border: 1px solid var(--gh-border);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: border-color 0.12s ease, color 0.12s ease;
+  }
+
+  :global(.gh-repo-tag:hover) {
+    border-color: var(--rule-strong);
+    color: var(--gh-text);
+  }
+
+  :global(.gh-pr-number) {
+    font-family: var(--font-mono);
+    color: var(--gh-text-faint);
+  }
+
+  :global(.gh-meta-sep) {
+    color: var(--gh-text-faint);
+  }
+
+  :global(.gh-pr-time) {
+    color: var(--gh-text-muted);
+  }
+
+  /* Pagination Bar */
+  .gh-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    flex-wrap: wrap;
+  }
+
+  .gh-pagination__info {
+    font-size: 0.75rem;
+    color: var(--gh-text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .gh-pagination__controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .gh-page-btn {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid var(--gh-border);
+    background: var(--paper);
+    color: var(--gh-text);
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+  }
+
+  .gh-page-btn:hover:not(:disabled) {
+    background: var(--gh-card-bg);
+    border-color: var(--rule-strong);
+  }
+
+  .gh-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .gh-page-numbers {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  :global(.gh-num-btn) {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--gh-text-muted);
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  }
+
+  :global(.gh-num-btn:hover) {
+    color: var(--gh-text);
+    background: var(--gh-card-bg);
+    border-color: var(--gh-border);
+  }
+
+  :global(.gh-num-btn--active) {
+    background: var(--paper-deep);
+    color: var(--gh-text);
+    border-color: var(--rule-strong);
+    font-weight: 600;
+  }
+
+  :global(.gh-num-ellipsis) {
+    font-size: 0.75rem;
+    color: var(--gh-text-faint);
+    padding: 0 2px;
+  }
+</style>
+
+<script>
+  function initGitHubContributions() {
+    const root = document.querySelector('[data-gh-root]');
+    if (!root || (root as HTMLElement).dataset.ghReady) return;
+    (root as HTMLElement).dataset.ghReady = 'true';
+
+    // Tooltip handling
+    const wrapper = root.querySelector('[data-graph-wrapper]') as HTMLElement;
+    const table = root.querySelector('[data-graph-table]') as HTMLTableElement;
+    const tooltip = root.querySelector('[data-gh-tooltip]') as HTMLElement;
+    const tooltipText = root.querySelector('[data-tooltip-text]') as HTMLElement;
+
+    if (wrapper && table && tooltip && tooltipText) {
+      table.addEventListener('mouseover', (e) => {
+        const target = (e.target as HTMLElement)?.closest('.gh-day-cell') as HTMLElement;
+        if (!target) {
+          tooltip.style.display = 'none';
+          return;
+        }
+
+        const text = target.dataset.tooltip || target.getAttribute('aria-label');
+        if (!text) return;
+
+        tooltipText.textContent = text;
+        tooltip.style.display = 'block';
+
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const cellRect = target.getBoundingClientRect();
+
+        const left = cellRect.left - wrapperRect.left + cellRect.width / 2 + wrapper.scrollLeft;
+        const top = cellRect.top - wrapperRect.top + wrapper.scrollTop;
+
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+      });
+
+      table.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+      });
+
+      // Auto-scroll calendar graph to the right so recent days are visible on mobile
+      requestAnimationFrame(() => {
+        if (wrapper.scrollWidth > wrapper.clientWidth) {
+          wrapper.scrollLeft = wrapper.scrollWidth - wrapper.clientWidth;
+        }
+      });
+    }
+
+    // Refresh & Live state
+    const refreshBtn = root.querySelector('[data-refresh-btn]') as HTMLButtonElement;
+    const refreshText = root.querySelector('[data-refresh-text]') as HTMLElement;
+    const totalCountEl = root.querySelector('[data-total-contributions]') as HTMLElement;
+    const prTotalBadge = root.querySelector('[data-pr-total-badge]') as HTMLElement;
+    const prsList = root.querySelector('[data-prs-list]') as HTMLElement;
+    const loadingBar = root.querySelector('[data-prs-loading]') as HTMLElement;
+
+    let currentPage = 1;
+    let currentTotalPages = 1;
+
+    // Pagination elements
+    const pageSummary = root.querySelector('[data-page-summary]') as HTMLElement;
+    const pageNumbersWrap = root.querySelector('[data-page-numbers]') as HTMLElement;
+    const prevBtn = root.querySelector('[data-page-prev]') as HTMLButtonElement;
+    const nextBtn = root.querySelector('[data-page-next]') as HTMLButtonElement;
+
+    function renderPageNumbers(page: number, totalPages: number) {
+      if (!pageNumbersWrap) return;
+      pageNumbersWrap.innerHTML = '';
+
+      currentTotalPages = totalPages;
+      currentPage = page;
+
+      if (prevBtn) prevBtn.disabled = page <= 1;
+      if (nextBtn) nextBtn.disabled = page >= totalPages;
+      if (pageSummary) pageSummary.textContent = `Page ${page} of ${totalPages}`;
+
+      // Build compact page number buttons (1, 2, ..., n)
+      const pagesToShow: (number | string)[] = [];
+      if (totalPages <= 5) {
+        for (let i = 1; i <= totalPages; i++) pagesToShow.push(i);
+      } else {
+        pagesToShow.push(1);
+        if (page > 3) pagesToShow.push('…');
+        const start = Math.max(2, page - 1);
+        const end = Math.min(totalPages - 1, page + 1);
+        for (let i = start; i <= end; i++) pagesToShow.push(i);
+        if (page < totalPages - 2) pagesToShow.push('…');
+        pagesToShow.push(totalPages);
+      }
+
+      pagesToShow.forEach((p) => {
+        if (p === '…') {
+          const span = document.createElement('span');
+          span.className = 'gh-num-ellipsis';
+          span.textContent = '…';
+          pageNumbersWrap.appendChild(span);
+        } else {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `gh-num-btn ${p === page ? 'gh-num-btn--active' : ''}`;
+          btn.textContent = String(p);
+          btn.setAttribute('aria-label', `Go to page ${p}`);
+          btn.addEventListener('click', () => {
+            if (p !== currentPage) fetchPrPage(Number(p));
+          });
+          pageNumbersWrap.appendChild(btn);
+        }
+      });
+    }
+
+    function formatDateClient(isoString: string): string {
+      try {
+        const d = new Date(isoString);
+        return d.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+      } catch {
+        return isoString;
+      }
+    }
+
+    interface PrItem {
+      id: number;
+      number: number;
+      title: string;
+      url: string;
+      repo: string;
+      merged_at: string;
+    }
+
+    function renderPrList(prs: PrItem[]) {
+      if (!prsList) return;
+      prsList.innerHTML = '';
+
+      if (prs.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'gh-pr-card';
+        empty.innerHTML = `<span style="color: var(--gh-text-muted); font-size: 0.875rem;">No pull requests found.</span>`;
+        prsList.appendChild(empty);
+        return;
+      }
+
+      prs.forEach((pr) => {
+        const li = document.createElement('li');
+        li.className = 'gh-pr-card';
+
+        li.innerHTML = `
+          <div class="gh-pr-icon-wrap" aria-hidden="true" title="Merged Pull Request">
+            <svg class="gh-pr-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+              <path d="M5.45 5.154A4.25 4.25 0 0 0 9.25 7.5h1.378a2.251 2.251 0 1 1 0 1.5H9.25A5.734 5.734 0 0 1 5 7.123v5.127a2.25 2.25 0 1 1-1.5 0V3.75a2.25 2.25 0 1 1 1.95 1.404ZM4.25 3a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 10.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm8.5-4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+            </svg>
+          </div>
+          <div class="gh-pr-content">
+            <div class="gh-pr-main-row">
+              <a href="${pr.url}" target="_blank" rel="noopener noreferrer" class="gh-pr-title-link">
+                ${escapeHtml(pr.title)}
+              </a>
+            </div>
+            <div class="gh-pr-meta">
+              <a href="https://github.com/${pr.repo}" target="_blank" rel="noopener noreferrer" class="gh-repo-tag">
+                ${escapeHtml(pr.repo)}
+              </a>
+              <span class="gh-pr-number">#${pr.number}</span>
+              <span class="gh-meta-sep" aria-hidden="true">·</span>
+              <time class="gh-pr-time" datetime="${pr.merged_at}">
+                Merged ${formatDateClient(pr.merged_at)}
+              </time>
+            </div>
+          </div>
+        `;
+        prsList.appendChild(li);
+      });
+    }
+
+    function escapeHtml(text: string): string {
+      const map: Record<string, string> = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+      };
+      return text.replace(/[&<>"']/g, (m) => map[m] || m);
+    }
+
+    async function fetchPrPage(page: number, forceRefresh = false) {
+      if (loadingBar) loadingBar.classList.add('gh-prs-loading-bar--active');
+
+      try {
+        const query = new URLSearchParams({
+          type: 'community',
+          page: String(page),
+          per_page: '10',
+          ...(forceRefresh ? { refresh: '1' } : {}),
+        });
+
+        const res = await fetch(`/api/github/prs?${query.toString()}`);
+        if (!res.ok) throw new Error('Failed to load PRs');
+
+        const data = await res.json();
+        renderPrList(data.prs || []);
+        renderPageNumbers(data.page, data.total_pages);
+        if (prTotalBadge && data.total_count !== undefined) {
+          prTotalBadge.textContent = `${data.total_count} merged`;
+        }
+      } catch (err) {
+        console.error('Error fetching PRs:', err);
+      } finally {
+        if (loadingBar) loadingBar.classList.remove('gh-prs-loading-bar--active');
+      }
+    }
+
+    // Pagination prev/next
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) fetchPrPage(currentPage - 1);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        if (currentPage < currentTotalPages) fetchPrPage(currentPage + 1);
+      });
+    }
+
+    // Refresh action
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.classList.add('gh-refresh-btn--spinning');
+        if (refreshText) refreshText.textContent = 'Updating…';
+
+        try {
+          // Fetch refreshed contributions & PRs in parallel
+          const [contribRes] = await Promise.all([
+            fetch('/api/github/contributions?refresh=1'),
+            fetchPrPage(currentPage, true),
+          ]);
+
+          if (contribRes.ok) {
+            const contribData = await contribRes.json();
+            if (contribData.totalContributions && totalCountEl) {
+              totalCountEl.innerHTML = `<strong>${contribData.totalContributions}</strong> contributions in the last year`;
+            }
+
+            // Update cells
+            if (contribData.rows && table) {
+              contribData.rows.forEach((row: { days: { date: string; level: number; text: string }[] }) => {
+                row.days.forEach((day: { date: string; level: number; text: string }) => {
+                  const cell = table.querySelector(`[data-date="${day.date}"]`) as HTMLElement;
+                  if (cell) {
+                    cell.dataset.level = String(day.level);
+                    cell.dataset.tooltip = day.text;
+                    cell.setAttribute('aria-label', day.text);
+                  }
+                });
+              });
+            }
+          }
+
+          if (refreshText) refreshText.textContent = 'Updated!';
+          setTimeout(() => {
+            if (refreshText) refreshText.textContent = 'Refresh';
+          }, 2000);
+        } catch (err) {
+          console.error('Error refreshing GitHub data:', err);
+          if (refreshText) refreshText.textContent = 'Refresh';
+        } finally {
+          refreshBtn.classList.remove('gh-refresh-btn--spinning');
+        }
+      });
+    }
+
+    // Initialize initial pagination bar
+    const initialTotalPages = Math.max(1, Math.ceil(parseInt(prTotalBadge?.textContent || '579', 10) / 10));
+    renderPageNumbers(1, initialTotalPages);
+  }
+
+  // Initialize on load and page transitions
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGitHubContributions);
+  } else {
+    initGitHubContributions();
+  }
+
+  document.addEventListener('astro:page-load', initGitHubContributions);
+</script>

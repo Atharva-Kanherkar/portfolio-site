@@ -22,6 +22,7 @@ import {
 } from '../crashout';
 import { PROJECTS } from '../projects';
 import { TIMELINE } from '../timeline';
+import { GITHUB_SNAPSHOT } from './github-snapshot';
 import { assistantApiDocs } from './assistant';
 import { absoluteUrl } from './agent-http';
 
@@ -128,6 +129,15 @@ export async function buildSiteJson() {
     assistant: assistantApiDocs(),
     about: ABOUT,
     timeline: TIMELINE,
+    contributions: {
+      profile: SITE.github,
+      total_last_year: GITHUB_SNAPSHOT.contributions.totalContributions,
+      community_merged_prs: GITHUB_SNAPSHOT.prs.community.total_count,
+      api: {
+        contributions: absoluteUrl('/api/github/contributions'),
+        prs: absoluteUrl('/api/github/prs'),
+      },
+    },
     projects: {
       intro: PROJECTS_INTRO,
       items: PROJECTS,
@@ -260,6 +270,10 @@ ${BIO}
 ## Work
 
 ${timeline}
+
+## Contributions
+
+Code in the open. ${GITHUB_SNAPSHOT.contributions.totalContributions} contributions in the last year and ${GITHUB_SNAPSHOT.prs.community.total_count}+ merged pull requests to community and open-source projects (such as NVIDIA-NeMo/Switchyard, SakanaAI/ShinkaEvolve, mozilla-ai/any-llm, and agentclash). Live interactive contribution graph and paginated PRs at ${SITE.url} and via APIs (${absoluteUrl('/api/github/contributions')}, ${absoluteUrl('/api/github/prs')}).
 
 ## Projects
 

@@ -56,6 +56,8 @@ function formatDate(isoString: string): string {
       </div>
     </div>
 
+    <!-- Bordered graph box, like the actual GitHub profile calendar -->
+    <div class="gh-graph-box">
     <!-- Calendar Graph Table (Horizontally Scrollable on Mobile) -->
     <div class="gh-graph-wrapper" data-graph-wrapper>
       <table class="gh-graph-table" role="grid" aria-label="GitHub Contribution Graph" data-graph-table>
@@ -128,6 +130,7 @@ function formatDate(isoString: string): string {
         <span class="gh-legend__cell" data-level="4"></span>
         <span class="gh-legend__label">More</span>
       </div>
+    </div>
     </div>
   </div>
 
@@ -297,13 +300,20 @@ function formatDate(isoString: string): string {
   }
 
   .gh-calendar-card__total {
-    font-size: var(--text-sm);
-    color: var(--gh-text-soft);
+    font-size: 1rem;
+    color: var(--gh-text);
   }
 
   .gh-calendar-card__total strong {
     font-weight: 600;
     color: var(--gh-text);
+  }
+
+  /* Thin bordered box around the graph + footer, like GitHub's profile calendar */
+  .gh-graph-box {
+    border: 1px solid var(--gh-border);
+    border-radius: 6px;
+    padding: 0.625rem 1rem 0.75rem;
   }
 
   .gh-calendar-card__actions {
@@ -366,11 +376,11 @@ function formatDate(isoString: string): string {
 
   .gh-graph-table {
     border-collapse: separate;
-    border-spacing: 4px;
-    margin: 0 auto 0 0;
+    border-spacing: 3px;
+    margin: 0;
     font-size: 0.75rem;
     user-select: none;
-    width: 100%;
+    width: max-content;
   }
 
   .gh-graph-months-row {
@@ -412,11 +422,13 @@ function formatDate(isoString: string): string {
     height: 11px;
     min-width: 11px;
     min-height: 11px;
+    max-width: 11px;
     border-radius: 2px;
     box-sizing: border-box;
     cursor: pointer;
     transition: transform 0.08s ease, outline 0.08s ease;
-    outline: 1px solid rgba(0, 0, 0, 0.04);
+    outline: 1px solid rgba(0, 0, 0, 0.06);
+    outline-offset: -1px;
   }
 
   :global(:root[data-theme='dark']) .gh-day-cell,
@@ -543,6 +555,8 @@ function formatDate(isoString: string): string {
     width: 11px;
     height: 11px;
     border-radius: 2px;
+    outline: 1px solid rgba(0, 0, 0, 0.06);
+    outline-offset: -1px;
   }
 
   .gh-legend__cell[data-level='0'] { background-color: var(--gh-l0); }

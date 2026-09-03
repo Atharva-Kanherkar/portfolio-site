@@ -1,0 +1,180 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import '../styles/evohq.css';
+
+export const prerender = true;
+
+const title = 'LLM infrastructure notes';
+const description = 'Selected LLM routing, protocol-translation, and compatibility contributions by Atharva Kanherkar.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonical="https://www.atharvakanherkar.com/evohq"
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: title,
+    author: { '@type': 'Person', name: 'Atharva Kanherkar', url: 'https://www.atharvakanherkar.com' },
+    description,
+    url: 'https://www.atharvakanherkar.com/evohq',
+  }}
+>
+  <article class="evohq">
+    <header class="evohq__hero">
+      <p class="evohq__eyebrow">Selected systems work · June—September 2026</p>
+      <h1>LLM infrastructure should preserve intent under translation.</h1>
+      <p class="evohq__lede">
+        Four merged upstream patches, traced from the issues that exposed them. The common problem: a model request can return HTTP 200 while its instructions, safety state, credentials, tools, or schemas quietly change meaning on the way through.
+      </p>
+      <dl class="evohq__facts" aria-label="Portfolio summary">
+        <div><dt>Contributions</dt><dd>4 merged PRs</dd></div>
+        <div><dt>Investigations</dt><dd>4 authored issues</dd></div>
+        <div><dt>Focus</dt><dd>Routing · compatibility · safety</dd></div>
+      </dl>
+    </header>
+
+    <section class="evohq__thesis" aria-labelledby="evohq-thesis">
+      <p class="evohq__index">01 / Thesis</p>
+      <div>
+        <h2 id="evohq-thesis">A successful transport is not necessarily a correct request.</h2>
+        <p>
+          In a gateway, “compatible” needs to mean more than accepting a familiar endpoint. It means preserving instruction precedence, the meaning of a safety stop, the ownership of upstream identity, and the state an agent needs to continue a turn. When a target cannot express a requested constraint, the reliable behavior is an explicit failure—not quiet degradation.
+        </p>
+      </div>
+    </section>
+
+    <section class="evohq__studies" aria-labelledby="evohq-studies">
+      <div class="evohq__section-heading">
+        <p class="evohq__index">02 / Investigations → repairs</p>
+        <h2 id="evohq-studies">Each issue began with an invariant.</h2>
+        <p>Reproduce the loss on the wire, identify the normalization boundary, then leave a regression test where the silent failure used to be.</p>
+      </div>
+
+      <article class="evohq-study" aria-labelledby="roles-title">
+        <header class="evohq-study__meta"><span>01</span><span>NVIDIA NeMo / Switchyard</span><span>Aug 2026</span></header>
+        <div class="evohq-study__grid">
+          <div>
+            <h3 id="roles-title">Instruction roles survived the Responses boundary.</h3>
+            <p><strong>Issue.</strong> An authored report captured, five times in a row, inline <code>system</code> and <code>developer</code> Responses items arriving at a Chat backend as user messages. The request completed normally, with changed instruction authority.</p>
+            <p><strong>Repair.</strong> Move instruction-bearing items into the existing normalized <code>instructions</code> channel, letting each provider encoder express the role on its own native surface.</p>
+            <p class="evohq-study__invariant"><strong>Invariant:</strong> an instruction remains an instruction across every wire format.</p>
+            <p class="evohq-study__links"><a href="https://github.com/NVIDIA-NeMo/Switchyard/issues/521">Read investigation ↗</a><a href="https://github.com/NVIDIA-NeMo/Switchyard/pull/523">Read merged repair ↗</a></p>
+          </div>
+          <figure class="evohq-figure">
+            <svg viewBox="0 0 600 230" role="img" aria-labelledby="roles-figure-title roles-figure-desc">
+              <title id="roles-figure-title">Instruction-role preservation across API translation</title><desc id="roles-figure-desc">System and developer roles pass from Responses input to a normalized instructions channel and then correctly to Chat, Anthropic, and Responses egress.</desc>
+              <defs><marker id="roles-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" /></marker></defs>
+              <text x="16" y="24" class="evohq-svg-label">INGRESS</text><text x="222" y="24" class="evohq-svg-label">NORMALIZED IR</text><text x="440" y="24" class="evohq-svg-label">EGRESS</text>
+              <rect x="16" y="52" width="145" height="112" class="evohq-svg-box"/><text x="34" y="88" class="evohq-svg-text">Responses input</text><text x="34" y="118" class="evohq-svg-code">system</text><text x="34" y="143" class="evohq-svg-code">developer</text>
+              <path d="M161 109H210" class="evohq-svg-arrow" marker-end="url(#roles-arrow)"/><rect x="223" y="52" width="142" height="112" class="evohq-svg-box evohq-svg-box--hot"/><text x="243" y="96" class="evohq-svg-text">instructions</text><text x="243" y="123" class="evohq-svg-muted">authority channel</text>
+              <path d="M365 109H421" class="evohq-svg-arrow" marker-end="url(#roles-arrow)"/><rect x="434" y="41" width="150" height="135" class="evohq-svg-box"/><text x="454" y="78" class="evohq-svg-text">Chat</text><text x="454" y="106" class="evohq-svg-text">Anthropic</text><text x="454" y="134" class="evohq-svg-text">Responses</text><text x="454" y="158" class="evohq-svg-muted">native roles</text>
+              <text x="16" y="209" class="evohq-svg-caption">same semantics · three protocol surfaces</text>
+            </svg>
+            <figcaption>Figure 1. Fix the shared representation once; each encoder can then preserve native role semantics.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="evohq-study" aria-labelledby="headers-title">
+        <header class="evohq-study__meta"><span>02</span><span>NVIDIA NeMo / Switchyard</span><span>Aug 2026</span></header>
+        <div class="evohq-study__grid">
+          <div>
+            <h3 id="headers-title">A metadata forwarder became a real trust boundary.</h3>
+            <p><strong>Issue.</strong> A review of the reserved-header set found three unprotected identity selectors: Azure’s <code>api-key</code>, plus OpenAI organization and project headers. A client could make the gateway forward identity or tenancy information next to its configured credential.</p>
+            <p><strong>Repair.</strong> Reserve the missing headers and prove that caller-controlled copies disappear while backend authorization is retained.</p>
+            <p class="evohq-study__invariant"><strong>Invariant:</strong> callers may supply metadata, never the gateway’s upstream identity.</p>
+            <p class="evohq-study__links"><a href="https://github.com/NVIDIA-NeMo/Switchyard/issues/419">Read investigation ↗</a><a href="https://github.com/NVIDIA-NeMo/Switchyard/pull/420">Read merged repair ↗</a></p>
+          </div>
+          <figure class="evohq-figure">
+            <svg viewBox="0 0 600 230" role="img" aria-labelledby="headers-figure-title headers-figure-desc">
+              <title id="headers-figure-title">Header isolation at an LLM gateway</title><desc id="headers-figure-desc">Caller headers enter a reserved filter. Credential and tenant headers are blocked, backend authorization is added, and only the gateway identity reaches the provider.</desc>
+              <defs><marker id="headers-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" /></marker></defs>
+              <text x="16" y="24" class="evohq-svg-label">CALLER</text><text x="217" y="24" class="evohq-svg-label">TRUST BOUNDARY</text><text x="442" y="24" class="evohq-svg-label">UPSTREAM</text>
+              <rect x="16" y="52" width="160" height="112" class="evohq-svg-box"/><text x="35" y="86" class="evohq-svg-text">metadata</text><text x="35" y="116" class="evohq-svg-code">api-key</text><text x="35" y="141" class="evohq-svg-code">org / project</text>
+              <path d="M176 109H204" class="evohq-svg-arrow" marker-end="url(#headers-arrow)"/><rect x="217" y="42" width="164" height="137" class="evohq-svg-box evohq-svg-box--hot"/><text x="237" y="78" class="evohq-svg-text">reserved filter</text><path d="M250 110l25 25m0-25l-25 25" class="evohq-svg-cross"/><text x="296" y="126" class="evohq-svg-muted">block identity</text><text x="237" y="157" class="evohq-svg-muted">add backend auth</text>
+              <path d="M381 109H423" class="evohq-svg-arrow" marker-end="url(#headers-arrow)"/><rect x="436" y="52" width="148" height="112" class="evohq-svg-box"/><text x="456" y="91" class="evohq-svg-text">provider</text><text x="456" y="121" class="evohq-svg-muted">one credential</text><text x="456" y="145" class="evohq-svg-muted">one tenant</text>
+              <text x="16" y="209" class="evohq-svg-caption">forward metadata · retain authority</text>
+            </svg>
+            <figcaption>Figure 2. A gateway cannot be a transparent tunnel for credentials and tenant selection.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="evohq-study" aria-labelledby="safety-title">
+        <header class="evohq-study__meta"><span>03</span><span>NVIDIA NeMo / Switchyard</span><span>Aug 2026</span></header>
+        <div class="evohq-study__grid">
+          <div>
+            <h3 id="safety-title">A safety stop became observable instead of ordinary.</h3>
+            <p><strong>Issue.</strong> An OpenAI <code>content_filter</code> stop was normalized internally but emitted to Anthropic clients as <code>end_turn</code>—the same outcome as a normal completion. Buffered responses, streams, and accumulation shared the blind spot.</p>
+            <p><strong>Repair.</strong> Carry <code>ContentFilter</code> through the response pipeline and encode the valid Anthropic <code>refusal</code> / <code>stop_details</code> form, including the reverse translation.</p>
+            <p class="evohq-study__invariant"><strong>Invariant:</strong> a safety event retains its provenance through streaming and provider translation.</p>
+            <p class="evohq-study__links"><a href="https://github.com/NVIDIA-NeMo/Switchyard/issues/369">Read investigation ↗</a><a href="https://github.com/NVIDIA-NeMo/Switchyard/pull/370">Read merged repair ↗</a></p>
+          </div>
+          <figure class="evohq-figure">
+            <svg viewBox="0 0 600 230" role="img" aria-labelledby="safety-figure-title safety-figure-desc">
+              <title id="safety-figure-title">Content filter signal preservation</title><desc id="safety-figure-desc">A content-filter stop is represented as a normalized content-filter state then emitted as an Anthropic refusal with stop details.</desc>
+              <defs><marker id="safety-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" /></marker></defs>
+              <text x="16" y="24" class="evohq-svg-label">SOURCE</text><text x="209" y="24" class="evohq-svg-label">NORMALIZED STATE</text><text x="429" y="24" class="evohq-svg-label">CLIENT</text>
+              <rect x="16" y="62" width="160" height="96" class="evohq-svg-box"/><text x="35" y="99" class="evohq-svg-text">OpenAI stop</text><text x="35" y="129" class="evohq-svg-code">content_filter</text>
+              <path d="M176 109H195" class="evohq-svg-arrow" marker-end="url(#safety-arrow)"/><rect x="209" y="48" width="165" height="124" class="evohq-svg-box evohq-svg-box--hot"/><text x="229" y="91" class="evohq-svg-text">StopReason</text><text x="229" y="120" class="evohq-svg-code">ContentFilter</text><text x="229" y="148" class="evohq-svg-muted">buffered + stream</text>
+              <path d="M374 109H411" class="evohq-svg-arrow" marker-end="url(#safety-arrow)"/><rect x="425" y="53" width="159" height="114" class="evohq-svg-box"/><text x="445" y="91" class="evohq-svg-text">Anthropic</text><text x="445" y="119" class="evohq-svg-code">refusal</text><text x="445" y="145" class="evohq-svg-muted">stop_details</text>
+              <text x="16" y="209" class="evohq-svg-caption">preserve why generation stopped · not only that it stopped</text>
+            </svg>
+            <figcaption>Figure 3. A stopped completion needs the same semantic fidelity as a successful one.</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <article class="evohq-study" aria-labelledby="bridge-title">
+        <header class="evohq-study__meta"><span>04</span><span>Mozilla AI / AnyLLM</span><span>Sep 2026</span></header>
+        <div class="evohq-study__grid">
+          <div>
+            <h3 id="bridge-title">The Messages bridge stopped silently deleting agent state.</h3>
+            <p><strong>Issue.</strong> A single capture rig exposed six encode-side losses when Anthropic Messages traffic passed through an OpenAI-compatible bridge: thinking history, sequential-tool intent, tool errors, image/document output, and a near-miss JSON-schema shape. Each returned 200 without a warning.</p>
+            <p><strong>Repair.</strong> Choose the valid OpenAI-side carrier for each field, retain attachment ordering, reject schema-less structured output, and surface unsupported sequential-tool behavior as the caller’s actual constraint.</p>
+            <p class="evohq-study__invariant"><strong>Invariant:</strong> an agent turn remains replayable—or incompatibility is explicit.</p>
+            <p class="evohq-study__links"><a href="https://github.com/mozilla-ai/any-llm/issues/1311">Read investigation ↗</a><a href="https://github.com/mozilla-ai/any-llm/pull/1312">Read merged repair ↗</a></p>
+          </div>
+          <figure class="evohq-figure">
+            <svg viewBox="0 0 600 230" role="img" aria-labelledby="bridge-figure-title bridge-figure-desc">
+              <title id="bridge-figure-title">Semantic preservation in an Anthropic Messages compatibility bridge</title><desc id="bridge-figure-desc">Thinking, tool, attachments, and schema fields move from the Messages API through a compatibility encoder to valid OpenAI-compatible representations or an explicit error.</desc>
+              <defs><marker id="bridge-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" /></marker></defs>
+              <text x="16" y="24" class="evohq-svg-label">MESSAGES API</text><text x="210" y="24" class="evohq-svg-label">COMPATIBILITY ENCODER</text><text x="437" y="24" class="evohq-svg-label">TARGET WIRE</text>
+              <rect x="16" y="44" width="170" height="139" class="evohq-svg-box"/><text x="35" y="77" class="evohq-svg-text">thinking + signature</text><text x="35" y="103" class="evohq-svg-text">tool policy / error</text><text x="35" y="129" class="evohq-svg-text">image / document</text><text x="35" y="155" class="evohq-svg-text">JSON schema</text>
+              <path d="M186 113H197" class="evohq-svg-arrow" marker-end="url(#bridge-arrow)"/><rect x="211" y="44" width="167" height="139" class="evohq-svg-box evohq-svg-box--hot"/><text x="230" y="79" class="evohq-svg-text">map valid carrier</text><text x="230" y="107" class="evohq-svg-text">retain ordering</text><text x="230" y="135" class="evohq-svg-text">validate or reject</text><text x="230" y="160" class="evohq-svg-muted">no silent loss</text>
+              <path d="M378 113H417" class="evohq-svg-arrow" marker-end="url(#bridge-arrow)"/><rect x="430" y="44" width="154" height="139" class="evohq-svg-box"/><text x="450" y="80" class="evohq-svg-text">OpenAI shape</text><text x="450" y="110" class="evohq-svg-muted">or explicit</text><text x="450" y="136" class="evohq-svg-muted">capability error</text>
+              <text x="16" y="209" class="evohq-svg-caption">a valid response must retain the caller’s meaning</text>
+            </svg>
+            <figcaption>Figure 4. Compatibility code must carry a field validly or make the incompatibility visible.</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <section class="evohq__method" aria-labelledby="evohq-method">
+      <p class="evohq__index">03 / Method</p>
+      <div>
+        <h2 id="evohq-method">Test the wire, not the hope.</h2>
+        <p>The issues are part of the work: they isolate a concrete protocol invariant, capture a reproducible failure, and distinguish the bug from the control path. The resulting changes use the shared normalization layer when possible, then test buffered, streamed, and round-trip behavior where semantics tend to vanish.</p>
+        <ol><li>Capture exactly what crossed the provider boundary.</li><li>Repair the representation, not merely the happy-path response.</li><li>Keep a regression fixture at every conversion edge.</li></ol>
+      </div>
+    </section>
+
+    <section class="evohq__context" aria-labelledby="evohq-context">
+      <p class="evohq__index">04 / Wider work</p>
+      <div>
+        <h2 id="evohq-context">Systems work beyond the router.</h2>
+        <p>These case studies are deliberately narrow. They sit alongside tools for measuring agent behavior, building memory and datasets, teaching from source material, and turning prompts into explainable generated artifacts.</p>
+        <div class="evohq__projects">
+          <a href="https://github.com/agentclash/agentclash"><b>AgentClash</b><span>Evidence-backed agent evaluation and regression gates.</span></a>
+          <a href="https://github.com/agentclash/agentic-memory"><b>agentic-memory</b><span>Semantic, episodic, and procedural agent memory.</span></a>
+          <a href="https://github.com/Atharva-Kanherkar/datasmith"><b>datasmith</b><span>Provider-agnostic synthetic-data and evaluation tooling.</span></a>
+          <a href="https://github.com/Atharva-Kanherkar/chalkboard"><b>chalkboard</b><span>Prompt-to-explainer-video pipeline with local-model support.</span></a>
+        </div>
+        <p class="evohq__private">Private production work is intentionally represented only at a capability level: model-integrated workflows, tool and connector surfaces, and the operational constraints required for dependable AI features.</p>
+      </div>
+    </section>
+  </article>
+</BaseLayout>

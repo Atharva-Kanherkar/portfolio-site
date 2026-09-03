@@ -39,6 +39,9 @@ export const prerender = true;
         <article><span>NVIDIA NeMo / Switchyard</span><h3>Stopped clients from forwarding API keys and OpenAI tenant headers through the proxy.</h3><a href="https://github.com/NVIDIA-NeMo/Switchyard/pull/420">View PR ↗</a></article>
         <article><span>NVIDIA NeMo / Switchyard</span><h3>Made content-filtered replies show up correctly for Anthropic clients.</h3><a href="https://github.com/NVIDIA-NeMo/Switchyard/pull/370">View PR ↗</a></article>
         <article><span>Mozilla AI / AnyLLM</span><h3>Fixed a Messages bridge that could leave out thinking, tool, attachments, and schema details.</h3><a href="https://github.com/mozilla-ai/any-llm/pull/1312">View PR ↗</a></article>
+        <article><span>SakanaAI / ShinkaEvolve</span><h3>Fixed Anthropic response parsing when reasoning and text arrive in different block shapes.</h3><a href="https://github.com/SakanaAI/ShinkaEvolve/pull/188">View PR ↗</a></article>
+        <article><span>SakanaAI / ShinkaEvolve</span><h3>Kept edit markers on their own line so inserted patches stay readable.</h3><a href="https://github.com/SakanaAI/ShinkaEvolve/pull/185">View PR ↗</a></article>
+        <article><span>SakanaAI / ShinkaEvolve</span><h3>Added stable Rust formatting checks for generated patches.</h3><a href="https://github.com/SakanaAI/ShinkaEvolve/pull/179">View PR ↗</a></article>
       </div>
     </section>
 
@@ -52,6 +55,16 @@ export const prerender = true;
         <a href="https://github.com/Atharva-Kanherkar/datasmith"><b>datasmith</b><span>Tools for building synthetic data and evaluation datasets.</span></a>
         <a href="https://github.com/Atharva-Kanherkar/proofswe"><b>ProofSWE</b><span>A way to capture and score coding-agent sessions.</span></a>
         <a href="https://github.com/Atharva-Kanherkar/chalkboard"><b>chalkboard</b><span>A prompt-to-explainer-video tool that can run with local models.</span></a>
+      </div>
+    </section>
+
+    <section class="evohq__section" aria-labelledby="kairo">
+      <p class="evohq__label">Kairo</p>
+      <h2 id="kairo">A growing record of LLM gateway failures</h2>
+      <div class="evohq__copy">
+        <p>Kairo is a public dataset and test harness for the awkward parts of moving tool calls between LLM APIs. I built it to keep small gateway bugs from disappearing after a report or a release.</p>
+        <p>So far it has 44 incident folders covering 48 reproduced bugs across LiteLLM, NVIDIA Switchyard, Bifrost, GoModel, AxonHub, and AnyLLM. The repo has 119 tests that replay recorded requests and responses without provider keys. The cases cover dropped tool settings, missing stop reasons, broken tool IDs, lost images and documents, thinking history, bad JSON-schema handling, and credential leaks. I also added a field-preservation sweep that compares gateways side by side instead of relying on one-off reports.</p>
+        <p><a href="https://github.com/Atharva-Kanherkar/kairo">Read the Kairo repository ↗</a></p>
       </div>
     </section>
 

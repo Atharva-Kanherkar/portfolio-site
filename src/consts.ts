@@ -24,7 +24,7 @@ export const PROJECTS_INTRO =
   "Stupid, curious engineer. I build things because they seem worth building. Sometimes they aren't, and that's just how it goes.";
 
 export const OPEN_SOURCE_NOTE =
-  "Most of what I merge upstream right now is translation-layer bug fixes for LLM gateways and routers: keeping tool calls, system messages, and content-filter responses intact when converting between Anthropic and OpenAI style APIs (NVIDIA-NeMo/Switchyard, mozilla-ai/any-llm), plus response-parsing and patch-correctness fixes for agent tooling like SakanaAI/ShinkaEvolve. I work mostly on the inference side: request and response shapes, streaming, and the places providers quietly disagree.";
+  "Most of what I merge upstream right now are LLM gateway and router bugs: places where converting between Anthropic and OpenAI style APIs drops fields (thinking blocks, tool calls, attachments, stop reasons), mishandles refusals and content filtering, or leaks credentials and org headers through a proxy (NVIDIA-NeMo/Switchyard, mozilla-ai/any-llm). I also fix response-parsing and patch-application correctness in coding-agent tooling like SakanaAI/ShinkaEvolve: block-type parsing, edit-marker placement, and formatting validation for generated patches. Mostly inference-side work: request and response shapes, streaming, and the spots where providers quietly disagree.";
 
 // Browser chrome color per theme. Mirrors --paper in src/styles/global.css.
 // The inline no-flash script in BaseHead duplicates these literals (it cannot

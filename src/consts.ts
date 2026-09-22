@@ -24,7 +24,7 @@ export const PROJECTS_INTRO =
   "Stupid, curious engineer. I build things because they seem worth building. Sometimes they aren't, and that's just how it goes.";
 
 export const OPEN_SOURCE_NOTE =
-  'Beyond my own projects, I contribute to open-source AI infrastructure — routers and LLM gateways, mostly on the inference side.';
+  "Most of what I merge upstream right now is translation-layer bug fixes for LLM gateways and routers: keeping tool calls, system messages, and content-filter responses intact when converting between Anthropic and OpenAI style APIs (NVIDIA-NeMo/Switchyard, mozilla-ai/any-llm), plus response-parsing and patch-correctness fixes for agent tooling like SakanaAI/ShinkaEvolve. I work mostly on the inference side: request and response shapes, streaming, and the places providers quietly disagree.";
 
 // Browser chrome color per theme. Mirrors --paper in src/styles/global.css.
 // The inline no-flash script in BaseHead duplicates these literals (it cannot

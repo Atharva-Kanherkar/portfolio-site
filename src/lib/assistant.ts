@@ -75,7 +75,7 @@ export function assistantApiDocs() {
 const assistantTools = {
   getRecentOpenSourceActivity: tool({
     description:
-      "Atharva's most recent merged pull requests on GitHub — live, not from memory. Defaults to community contributions (PRs to projects he does not own); pass type \"all\" to include his own repos too. Use this for any question about his current or recent open-source work, what he's contributing to lately, or specific PRs/repos.",
+      "Atharva's most recent merged pull requests on GitHub, live, not from memory. Defaults to community contributions (PRs to projects he does not own); pass type \"all\" to include his own repos too. Use this for any question about his current or recent open-source work, what he's contributing to lately, or specific PRs/repos.",
     inputSchema: z.object({
       type: z
         .enum(['community', 'all'])

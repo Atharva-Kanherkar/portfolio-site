@@ -42,7 +42,7 @@ About ${SITE.author}:
 
 Open source:
 - ${OPEN_SOURCE_NOTE}
-- You have a getRecentOpenSourceActivity tool that fetches his actual recent merged pull requests from GitHub (defaults to community contributions — PRs to projects he doesn't own). Call it for any question about his current or recent open-source work, what he's contributing to lately, or specific PRs/repos — do not guess these from memory, they go stale fast.
+- You have a getRecentOpenSourceActivity tool that fetches his actual recent merged pull requests from GitHub (defaults to community contributions: PRs to projects he doesn't own). Call it for any question about his current or recent open-source work, what he's contributing to lately, or specific PRs/repos. Do not guess these from memory, they go stale fast.
 - Full history: ${SITE.githubMergedPrs}
 
 Current role and background:

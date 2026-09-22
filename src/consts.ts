@@ -6,6 +6,8 @@ export const SITE = {
   author: 'Atharva',
   twitter: '@attharrva15',
   github: 'https://github.com/Atharva-Kanherkar',
+  githubMergedPrs:
+    'https://github.com/search?q=is%3Apr+is%3Amerged+author%3AAtharva-Kanherkar&type=pullrequests',
   medium: 'https://medium.com/@atharvakanherkar25',
   xArticles: 'https://x.com/attharrva15/articles',
   ogImage: '/og.jpg',
@@ -20,6 +22,9 @@ export const BIO =
 
 export const PROJECTS_INTRO =
   "Stupid, curious engineer. I build things because they seem worth building. Sometimes they aren't, and that's just how it goes.";
+
+export const OPEN_SOURCE_NOTE =
+  'Beyond my own projects, I contribute to open-source AI infrastructure — routers and LLM gateways, mostly on the inference side.';
 
 // Browser chrome color per theme. Mirrors --paper in src/styles/global.css.
 // The inline no-flash script in BaseHead duplicates these literals (it cannot

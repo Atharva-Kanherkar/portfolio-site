@@ -1,6 +1,10 @@
+import { generateText, streamText, stepCountIs, tool } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { z } from 'zod';
 import { SITE } from '../consts';
 import { buildAssistantSystemPrompt } from './assistant-prompt';
 import { absoluteUrl } from './agent-http';
+import { fetchMergedPrs } from './github';
 
 export type ChatRole = 'user' | 'assistant';
 
@@ -12,8 +16,6 @@ export type ChatMessage = {
 export const MAX_MESSAGES = 24;
 export const MAX_USER_CONTENT_LENGTH = 2000;
 export const MAX_ASSISTANT_CONTENT_LENGTH = 12000;
-
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
 export function isValidMessages(value: unknown): value is ChatMessage[] {
   if (!Array.isArray(value) || value.length === 0 || value.length > MAX_MESSAGES) {
@@ -70,128 +72,92 @@ export function assistantApiDocs() {
   };
 }
 
-function openaiPayload(messages: ChatMessage[], stream: boolean): Record<string, unknown> {
-  const model = import.meta.env.OPENAI_MODEL ?? 'gpt-5-mini';
-  const payload: Record<string, unknown> = {
-    model,
-    stream,
-    messages: [{ role: 'system', content: buildAssistantSystemPrompt() }, ...messages],
-  };
-  if (!model.startsWith('gpt-5')) {
-    payload.temperature = 0.4;
-  }
-  return payload;
-}
+const assistantTools = {
+  getRecentOpenSourceActivity: tool({
+    description:
+      "Atharva's most recent merged pull requests on GitHub — live, not from memory. Defaults to community contributions (PRs to projects he does not own); pass type \"all\" to include his own repos too. Use this for any question about his current or recent open-source work, what he's contributing to lately, or specific PRs/repos.",
+    inputSchema: z.object({
+      type: z
+        .enum(['community', 'all'])
+        .optional()
+        .describe('community = PRs to projects he does not own (default). all = including his own repos.'),
+      limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(10)
+        .optional()
+        .describe('How many recent merged PRs to return. Defaults to 5.'),
+    }),
+    execute: async ({ type, limit }) => {
+      const data = await fetchMergedPrs({ type: type ?? 'community', per_page: limit ?? 5 });
+      return {
+        live: data.isLive ?? false,
+        total_count: data.total_count,
+        pull_requests: data.prs.map((pr) => ({
+          repo: pr.repo,
+          number: pr.number,
+          title: pr.title,
+          url: pr.url,
+          merged_at: pr.merged_at,
+        })),
+      };
+    },
+  }),
+};
 
-async function openaiFetch(payload: Record<string, unknown>): Promise<Response | { error: string; status: number }> {
+function resolveModel() {
   const apiKey = import.meta.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return { error: 'Chat is not configured yet.', status: 503 };
-  }
-
-  try {
-    const response = await fetch(OPENAI_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok || !response.body) {
-      const errorText = await response.text();
-      console.error('OpenAI error:', errorText);
-      return { error: 'The assistant is unavailable right now.', status: 502 };
-    }
-
-    return response;
-  } catch (error) {
-    console.error('Chat route failed:', error);
-    return { error: 'The assistant is unavailable right now.', status: 500 };
-  }
+  if (!apiKey) return null;
+  const openai = createOpenAI({ apiKey });
+  return openai(import.meta.env.OPENAI_MODEL ?? 'gpt-5-mini');
 }
 
 export async function completeAssistantJson(
   messages: ChatMessage[],
 ): Promise<{ reply: string } | { error: string; status: number }> {
-  const upstream = await openaiFetch(openaiPayload(messages, false));
-  if ('error' in upstream) return upstream;
+  const model = resolveModel();
+  if (!model) return { error: 'Chat is not configured yet.', status: 503 };
 
   try {
-    const data = (await upstream.json()) as {
-      choices?: Array<{ message?: { content?: string | Array<{ text?: string }> } }>;
-    };
-    const content = data.choices?.[0]?.message?.content;
-    const reply = Array.isArray(content)
-      ? content.map((part) => part.text ?? '').join('')
-      : (content ?? '');
-    const trimmed = reply.trim();
-    if (!trimmed) {
-      return { error: 'The assistant is unavailable right now.', status: 502 };
-    }
-    return { reply: trimmed };
+    const result = await generateText({
+      model,
+      system: buildAssistantSystemPrompt(),
+      messages,
+      tools: assistantTools,
+      stopWhen: stepCountIs(4),
+    });
+
+    const reply = result.text.trim();
+    if (!reply) return { error: 'The assistant is unavailable right now.', status: 502 };
+    return { reply };
   } catch (error) {
-    console.error('Chat JSON parse failed:', error);
+    console.error('Assistant completion failed:', error);
     return { error: 'The assistant is unavailable right now.', status: 500 };
   }
 }
 
 export async function completeAssistantStream(
   messages: ChatMessage[],
-): Promise<ReadableStream<Uint8Array> | { error: string; status: number }> {
-  const upstream = await openaiFetch(openaiPayload(messages, true));
-  if ('error' in upstream) return upstream;
+): Promise<Response | { error: string; status: number }> {
+  const model = resolveModel();
+  if (!model) return { error: 'Chat is not configured yet.', status: 503 };
 
-  const body = upstream.body;
-  if (!body) {
-    return { error: 'The assistant is unavailable right now.', status: 502 };
+  try {
+    const result = streamText({
+      model,
+      system: buildAssistantSystemPrompt(),
+      messages,
+      tools: assistantTools,
+      stopWhen: stepCountIs(4),
+      onError: ({ error }) => console.error('Assistant stream failed:', error),
+    });
+
+    return result.toTextStreamResponse();
+  } catch (error) {
+    console.error('Assistant stream failed:', error);
+    return { error: 'The assistant is unavailable right now.', status: 500 };
   }
-
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-
-  return new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const reader = body.getReader();
-      let buffer = '';
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() ?? '';
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith('data:')) continue;
-
-            const data = trimmed.slice(5).trim();
-            if (!data || data === '[DONE]') continue;
-
-            try {
-              const parsed = JSON.parse(data) as {
-                choices?: Array<{ delta?: { content?: string } }>;
-              };
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) controller.enqueue(encoder.encode(content));
-            } catch {
-              // Ignore malformed chunks from upstream.
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Chat stream failed:', error);
-        controller.error(error);
-        return;
-      }
-
-      controller.close();
-    },
-  });
 }
 
 export function wantsStream(body: unknown): boolean {

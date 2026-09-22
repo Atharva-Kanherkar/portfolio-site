@@ -82,8 +82,8 @@ export const POST: APIRoute = async (context) => {
     return errorResponse(result.error, result.status);
   }
 
-  return new Response(result, {
-    status: 200,
+  return new Response(result.body, {
+    status: result.status,
     headers: {
       ...AGENT_CORS,
       'Content-Type': 'text/plain; charset=utf-8',

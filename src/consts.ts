@@ -6,6 +6,8 @@ export const SITE = {
   author: 'Atharva',
   twitter: '@attharrva15',
   github: 'https://github.com/Atharva-Kanherkar',
+  githubMergedPrs:
+    'https://github.com/search?q=is%3Apr+is%3Amerged+author%3AAtharva-Kanherkar&type=pullrequests',
   medium: 'https://medium.com/@atharvakanherkar25',
   xArticles: 'https://x.com/attharrva15/articles',
   ogImage: '/og.jpg',
@@ -20,6 +22,9 @@ export const BIO =
 
 export const PROJECTS_INTRO =
   "Stupid, curious engineer. I build things because they seem worth building. Sometimes they aren't, and that's just how it goes.";
+
+export const OPEN_SOURCE_NOTE =
+  "Most of what I merge upstream right now are LLM gateway and router bugs: places where converting between Anthropic and OpenAI style APIs drops fields (thinking blocks, tool calls, attachments, stop reasons), mishandles refusals and content filtering, or leaks credentials and org headers through a proxy (NVIDIA-NeMo/Switchyard, mozilla-ai/any-llm). I also fix response-parsing and patch-application correctness in coding-agent tooling like SakanaAI/ShinkaEvolve: block-type parsing, edit-marker placement, and formatting validation for generated patches. Mostly inference-side work: request and response shapes, streaming, and the spots where providers quietly disagree.";
 
 // Browser chrome color per theme. Mirrors --paper in src/styles/global.css.
 // The inline no-flash script in BaseHead duplicates these literals (it cannot

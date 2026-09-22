@@ -1,4 +1,4 @@
-import { SITE, WRITING_INTRO, WRITING_SECTIONS } from '../consts';
+import { OPEN_SOURCE_NOTE, SITE, WRITING_INTRO, WRITING_SECTIONS } from '../consts';
 import { PROJECTS } from '../projects';
 import { TIMELINE } from '../timeline';
 
@@ -39,6 +39,11 @@ About ${SITE.author}:
 - Medium: ${SITE.medium}
 - X articles: ${SITE.xArticles}
 - X: ${SITE.twitter}
+
+Open source:
+- ${OPEN_SOURCE_NOTE}
+- You have a getRecentOpenSourceActivity tool that fetches his actual recent merged pull requests from GitHub (defaults to community contributions: PRs to projects he doesn't own). Call it for any question about his current or recent open-source work, what he's contributing to lately, or specific PRs/repos. Do not guess these from memory, they go stale fast.
+- Full history: ${SITE.githubMergedPrs}
 
 Current role and background:
 ${timeline}

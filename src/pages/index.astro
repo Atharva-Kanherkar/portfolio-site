@@ -2,10 +2,9 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Projects from '../components/Projects.astro';
 import Timeline from '../components/Timeline.astro';
-import GitHubContributions from '../components/GitHubContributions.astro';
 import { Image } from 'astro:assets';
 import atharvaPhoto from '../assets/atharva.png';
-import { BIO, PROJECTS_INTRO, SITE } from '../consts';
+import { BIO, OPEN_SOURCE_NOTE, PROJECTS_INTRO, SITE } from '../consts';
 
 export const prerender = true;
 ---
@@ -32,9 +31,12 @@ export const prerender = true;
     <Timeline />
   </section>
 
-  <section class="section container container--wide" aria-labelledby="contributions">
-    <h2 id="contributions" class="section__title">Contributions</h2>
-    <GitHubContributions />
+  <section class="section container" aria-labelledby="open-source">
+    <h2 id="open-source" class="section__title">Open source</h2>
+    <p class="section__intro">
+      {OPEN_SOURCE_NOTE}{' '}
+      <a href={SITE.githubMergedPrs} rel="noopener noreferrer" target="_blank">Merged PRs on GitHub →</a>
+    </p>
   </section>
 
   <section class="section container" aria-labelledby="projects">

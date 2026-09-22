@@ -31,6 +31,14 @@ export const prerender = true;
     <Timeline />
   </section>
 
+  <section class="section container" aria-labelledby="open-source">
+    <h2 id="open-source" class="section__title">Open source</h2>
+    <p class="section__intro">
+      {OPEN_SOURCE_NOTE}{' '}
+      <a href={SITE.githubMergedPrs} rel="noopener noreferrer" target="_blank">Merged PRs on GitHub →</a>
+    </p>
+  </section>
+
   <section class="section container" aria-labelledby="projects">
     <h2 id="projects" class="section__title">Projects</h2>
     <p class="section__intro">
@@ -38,9 +46,5 @@ export const prerender = true;
       <a href={SITE.github}>GitHub</a>.
     </p>
     <Projects />
-    <p class="section-link">
-      {OPEN_SOURCE_NOTE}{' '}
-      <a href={SITE.githubMergedPrs} rel="noopener noreferrer" target="_blank">Merged PRs on GitHub →</a>
-    </p>
   </section>
 </BaseLayout>

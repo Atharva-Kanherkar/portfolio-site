@@ -22,21 +22,24 @@ const postsBySection = Object.fromEntries(
 ---
 
 <div class:list={['writing-columns', { 'writing-columns--compact': compact }]}>
-  {
-    WRITING_SECTIONS.map((section, i) => (
-      <section
-        class={`writing-column fade-in fade-in--${Math.min(i + 2, 4)}`}
-        aria-labelledby={`section-${section.id}`}
-      >
+  <div class="writing-columns__headers">
+    {
+      WRITING_SECTIONS.map((section) => (
         <header class="writing-column__header">
           <h3 id={`section-${section.id}`} class="writing-column__title">
             {section.label}
           </h3>
           {!compact && <p class="writing-column__desc">{section.description}</p>}
         </header>
+      ))
+    }
+  </div>
 
-        {
-          postsBySection[section.id].length > 0 ? (
+  <div class="writing-columns__lists">
+    {
+      WRITING_SECTIONS.map((section) => (
+        <section class="writing-column__body" aria-labelledby={`section-${section.id}`}>
+          {postsBySection[section.id].length > 0 ? (
             <ul class="writing-column__list">
               {postsBySection[section.id].map((post) => (
                 <li class="writing-column__item">
@@ -56,9 +59,9 @@ const postsBySection = Object.fromEntries(
             </ul>
           ) : (
             <p class="writing-column__empty">—</p>
-          )
-        }
-      </section>
-    ))
-  }
+          )}
+        </section>
+      ))
+    }
+  </div>
 </div>

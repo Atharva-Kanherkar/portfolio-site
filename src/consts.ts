@@ -18,7 +18,7 @@ export const SITE = {
 } as const;
 
 export const BIO =
-  "I'm 22, a curious engineer who builds software and ML systems and spends most of my time in open source, working toward more inclusive AI. Away from the terminal, my intellectual roots run through Advaita Vedanta and Indian philosophy.";
+  "i like poking at things to see how they work. i'm 22 and spend most of my time in open source, fixing llm gateways and routers: the layer where translating between anthropic and openai style apis quietly drops thinking blocks, tool calls, and stop reasons. i build tools around that too, like kairo, a dataset and harness for replaying gateway breakages, and agentclash, for evaluating agents. i also like working with data: synthetic generation, evals, and finding where models fall apart. outside of the serious stuff, i read philosophy (mostly advaita vedanta), lift weights, and listen to way too much hip hop.";
 
 export const PROJECTS_INTRO =
   "Stupid, curious engineer. I build things because they seem worth building. Sometimes they aren't, and that's just how it goes.";

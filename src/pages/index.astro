@@ -10,7 +10,7 @@ export const prerender = true;
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description}>
-  <section class="hero container">
+  <section class="hero container container--wide">
     <div class="hero__inner">
       <Image
         src={atharvaPhoto}
@@ -22,7 +22,9 @@ export const prerender = true;
       />
       <div class="hero__content">
         <h1 class="sr-only">{SITE.title}</h1>
-        <p class="hero__lede fade-in fade-in--3">{BIO}</p>
+        <div class="hero__lede fade-in fade-in--3">
+          {BIO.split('\n\n').map((para) => <p>{para}</p>)}
+        </div>
       </div>
     </div>
   </section>

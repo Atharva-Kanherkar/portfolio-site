@@ -18,7 +18,7 @@ export const SITE = {
 } as const;
 
 export const BIO =
-  "i like poking at things to see how they work. i'm 22 and spend most of my time in open source, fixing llm gateways and routers: the layer where translating between anthropic and openai style apis quietly drops thinking blocks, tool calls, and stop reasons. i build tools around that too, like kairo, a dataset and harness for replaying gateway breakages, and agentclash, for evaluating agents. i also like working with data: synthetic generation, evals, and finding where models fall apart. outside of the serious stuff, i read philosophy (mostly advaita vedanta), lift weights, and listen to way too much hip hop.";
+  "i'm 22 and mildly obsessed with how things fail. most of my days go into open source: llm gateways, routers, and the glue code where anthropic and openai apis disagree and quietly eat your tool calls, thinking blocks, and stop reasons. when a bug annoys me enough, i build something around it. kairo collects gateway breakages so anyone can replay them. agentclash throws agents at the same task and keeps score. i'm also into data: synthetic datasets, evals, and finding the exact spot where a model falls over. off the keyboard, i read too much philosophy (advaita vedanta, mostly), lift heavy things, and keep hip hop on loop.";
 
 export const PROJECTS_INTRO =
   "Stupid, curious engineer. I build things because they seem worth building. Sometimes they aren't, and that's just how it goes.";

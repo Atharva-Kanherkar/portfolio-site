@@ -673,31 +673,19 @@ main {
 
 .writing-columns {
   margin-top: var(--space-md);
+  border-top: 1px solid var(--rule);
 }
 
-.writing-columns__headers {
+.writing-column {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: var(--space-lg);
-  align-items: start;
-}
-
-.writing-columns__lists {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-lg);
-  margin-top: var(--space-lg);
-}
-
-.writing-column__body {
-  flex: 1 1 0;
-  min-width: 0;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  column-gap: var(--space-xl);
+  padding: var(--space-lg) 0;
+  border-bottom: 1px solid var(--rule);
 }
 
 .writing-column__header {
   margin: 0;
-  padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--rule);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -724,9 +712,10 @@ main {
 .writing-column__list {
   list-style: none;
   margin: 0;
-  padding: var(--space-md) 0 0;
+  padding: 0;
   display: grid;
   gap: var(--space-md);
+  max-width: 44rem;
   counter-reset: writing-entry;
 }
 
@@ -762,8 +751,9 @@ main {
   font-family: var(--font-body);
   font-size: var(--text-base);
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.4;
   letter-spacing: -0.01em;
+  margin: 0;
 }
 
 .writing-column__post-title a {
@@ -785,7 +775,6 @@ main {
   font-size: var(--text-sm);
   color: var(--ink-faint);
   margin: 0;
-  padding-top: var(--space-sm);
 }
 
 .writing-columns--compact .writing-column__header {
@@ -1068,37 +1057,14 @@ article.container {
   }
 }
 
-@media (max-width: 960px) {
-  .writing-columns__headers {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: var(--space-lg);
-  }
-
-  .writing-columns__lists {
-    flex-wrap: wrap;
-    row-gap: var(--space-xl);
-  }
-
-  .writing-column__body {
-    flex-basis: calc(50% - var(--space-lg) / 2);
+@media (max-width: 720px) {
+  .writing-column {
+    grid-template-columns: 1fr;
+    row-gap: var(--space-md);
   }
 }
 
 @media (max-width: 540px) {
-  .writing-columns__headers {
-    grid-template-columns: 1fr;
-    row-gap: var(--space-lg);
-  }
-
-  .writing-columns__lists {
-    flex-direction: column;
-    gap: var(--space-xl);
-  }
-
-  .writing-column__body {
-    flex-basis: auto;
-  }
-
   .site-nav {
     gap: 1.25rem;
   }

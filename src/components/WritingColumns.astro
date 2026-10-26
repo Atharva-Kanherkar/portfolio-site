@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { WRITING_SECTIONS } from '../consts';
+import { X_ARTICLES, xArticleUrl } from '../x-articles';
 
 interface Props {
   posts: CollectionEntry<'blog'>[];
@@ -10,15 +11,35 @@ interface Props {
 
 const { posts, limit, compact = false } = Astro.props;
 
-const postsBySection = Object.fromEntries(
+const entriesBySection = Object.fromEntries(
   WRITING_SECTIONS.map((section) => [
     section.id,
-    posts
-      .filter((post) => post.data.section === section.id)
-      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-      .slice(0, limit ?? posts.length),
+    [
+      ...posts.filter((post) => post.data.section === section.id).map((post) => ({
+        title: post.data.title,
+        date: post.data.pubDate,
+        href: `/blog/${post.id}`,
+        description: post.data.description,
+        external: false,
+      })),
+      ...X_ARTICLES.filter((article) => article.section === section.id).map((article) => ({
+        title: article.title,
+        date: new Date(`${article.date}T00:00:00Z`),
+        href: xArticleUrl(article.id),
+        description: '',
+        external: true,
+      })),
+    ]
+      .sort((a, b) => b.date.valueOf() - a.date.valueOf())
+      .slice(0, limit),
   ]),
-) as Record<(typeof WRITING_SECTIONS)[number]['id'], CollectionEntry<'blog'>[]>;
+) as Record<(typeof WRITING_SECTIONS)[number]['id'], {
+  title: string;
+  date: Date;
+  href: string;
+  description: string;
+  external: boolean;
+}[]>;
 ---
 
 <div class:list={['writing-columns', { 'writing-columns--compact': compact }]}>
@@ -39,24 +60,34 @@ const postsBySection = Object.fromEntries(
     {
       WRITING_SECTIONS.map((section) => (
         <section class="writing-column__body" aria-labelledby={`section-${section.id}`}>
-          {postsBySection[section.id].length > 0 ? (
-            <ul class="writing-column__list">
-              {postsBySection[section.id].map((post) => (
+          {entriesBySection[section.id].length > 0 ? (
+            <ol class="writing-column__list">
+              {entriesBySection[section.id].map((entry) => (
                 <li class="writing-column__item">
-                  <time class="writing-column__date" datetime={post.data.pubDate.toISOString()}>
-                    {post.data.pubDate.toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </time>
+                  <div class="writing-column__meta">
+                    <time class="writing-column__date" datetime={entry.date.toISOString()}>
+                      {entry.date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        timeZone: 'UTC',
+                      })}
+                    </time>
+                    {entry.external && <span class="writing-column__source"> · X article</span>}
+                  </div>
                   <h3 class="writing-column__post-title">
-                    <a href={`/blog/${post.id}`}>{post.data.title}</a>
+                    <a
+                      href={entry.href}
+                      target={entry.external ? '_blank' : undefined}
+                      rel={entry.external ? 'noopener noreferrer' : undefined}
+                    >
+                      {entry.title}
+                    </a>
                   </h3>
-                  {!compact && <p class="writing-column__excerpt">{post.data.description}</p>}
+                  {!compact && entry.description && <p class="writing-column__excerpt">{entry.description}</p>}
                 </li>
               ))}
-            </ul>
+            </ol>
           ) : (
             <p class="writing-column__empty">—</p>
           )}

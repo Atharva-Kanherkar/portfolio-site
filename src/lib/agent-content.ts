@@ -22,6 +22,7 @@ import {
 } from '../crashout';
 import { PROJECTS } from '../projects';
 import { TIMELINE } from '../timeline';
+import { X_ARTICLES, xArticleUrl } from '../x-articles';
 import { GITHUB_SNAPSHOT } from './github-snapshot';
 import { assistantApiDocs } from './assistant';
 import { absoluteUrl } from './agent-http';
@@ -286,12 +287,24 @@ ${projects}
 export async function buildBlogIndexMarkdown(): Promise<string> {
   const posts = await getPublishedPosts();
   const sections = WRITING_SECTIONS.map((section) => {
-    const items = posts.filter((post) => post.data.section === section.id);
+    const items = [
+      ...posts.filter((post) => post.data.section === section.id).map((post) => ({
+        title: post.data.title,
+        url: absoluteUrl(`/blog/${post.id}.md`),
+        date: post.data.pubDate.toISOString().slice(0, 10),
+        description: post.data.description,
+      })),
+      ...X_ARTICLES.filter((article) => article.section === section.id).map((article) => ({
+        title: article.title,
+        url: xArticleUrl(article.id),
+        date: article.date,
+        description: 'X article',
+      })),
+    ].sort((a, b) => b.date.localeCompare(a.date));
     if (items.length === 0) return '';
     const list = items
-      .map((post) => {
-        const date = post.data.pubDate.toISOString().slice(0, 10);
-        return mdLink(post.data.title, `/blog/${post.id}.md`, `${date}. ${post.data.description}`);
+      .map((item, index) => {
+        return `${index + 1}. [${item.title}](${item.url}) — ${item.date}. ${item.description}`;
       })
       .join('\n');
     return `## ${section.label}\n\n${section.description}\n\n${list}`;

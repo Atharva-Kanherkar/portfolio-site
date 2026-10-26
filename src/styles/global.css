@@ -724,14 +724,32 @@ main {
   padding: var(--space-md) 0 0;
   display: grid;
   gap: var(--space-md);
+  counter-reset: writing-entry;
 }
 
 .writing-column__item {
   display: grid;
-  gap: 0.35rem;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  column-gap: 0.35rem;
+  row-gap: 0.35rem;
 }
 
-.writing-column__date {
+.writing-column__item::before {
+  counter-increment: writing-entry;
+  content: counter(writing-entry, decimal-leading-zero);
+  grid-row: 1 / span 2;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+.writing-column__meta,
+.writing-column__post-title,
+.writing-column__excerpt {
+  grid-column: 2;
+}
+
+.writing-column__meta {
   font-size: var(--text-sm);
   color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
